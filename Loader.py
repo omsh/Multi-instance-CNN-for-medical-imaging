@@ -71,8 +71,8 @@ class DatasetLoader:
             return tf.cast(img, tf.float32), tf.cast(label, tf.int64)
     
     @staticmethod
-    def read_images_labels(dir_names=["0_Benign_PNGs", "1_Cnormal_PNGs", "2_InSitu_PNGs",
-                                "3_Invasive_PNGs"], n = 100):
+    def read_images_labels(dir_names=["data/0_Benign_PNGs", "data/1_Cnormal_PNGs", "data/2_InSitu_PNGs",
+                                "data/3_Invasive_PNGs"], n = 100):
         if (n > 100):
             n = 100
 
