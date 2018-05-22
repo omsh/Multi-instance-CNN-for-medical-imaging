@@ -7,12 +7,13 @@ class Config:
     num_classes = 4
     
     train_on_subset = True
-    subset_size = 240
+    subset_size = 200
     
     learning_rate = 1e-4
-    train_val_split = 0.7
+    train_val_split = 0.8
     batch_size = 8
-    num_epochs = 20
+    num_epochs = 10
     
     max_to_keep = 1
+    save_models = False
     
