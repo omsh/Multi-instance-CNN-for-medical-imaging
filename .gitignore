@@ -2,3 +2,4 @@
 __pycache__/
 /summary/
 /logs/
+/checkpoints/
