@@ -83,7 +83,8 @@ class MTrainer(BaseTrainer):
         
         self.summarizer.summarize(self.model.global_step_tensor.eval(self.sess), summaries_dict)
 
-        self.model.save(self.sess)
+        if (self.config.save_models):
+            self.model.save(self.sess)
         
         print("""
 Epoch-{}  loss:{:.4f} -- acc:{:.4f}
