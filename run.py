@@ -8,7 +8,7 @@ sys.path.extend(['..'])
 import tensorflow as tf
 
 from Loader import DatasetLoader
-from models.MModel import MModel
+from models import LeNet, ResNet50 
 from trainers.MTrainer import MTrainer
 
 from utils.logger import DefinedSummarizer
@@ -30,6 +30,7 @@ def main():
     
     logging.info("Started Logging")
     
+    logging.info(f"Type of Model: {pprint.pformat(Config.model_type)}")
     logging.info(f"Number of Epochs: {pprint.pformat(Config.num_epochs)}")
     logging.info(f"Learning Rate: {pprint.pformat(Config.learning_rate)}")
     logging.info(f"Train/Validation split ratio: {pprint.pformat(Config.train_val_split)}")
@@ -45,8 +46,13 @@ def main():
     data_loader = DatasetLoader(Config)
 
     # create instance of the model you want
-    model = MModel(data_loader, Config)
-
+    if (Config.model_type.lower() == 'lenet'):
+        model = LeNet.LeNet(data_loader, Config)
+    elif (Config.model_type.lower() == 'resnet50'):
+        model = ResNet50.ResNet50(data_loader, Config)
+    else:
+        model = LeNet.LeNet(data_loader, Config)
+    
     # create tensorboard logger
     logger = DefinedSummarizer(sess, summary_dir = Config.summary_dir, 
                                scalar_tags=['train/loss_per_epoch', 'train/acc_per_epoch',

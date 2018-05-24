@@ -2,10 +2,11 @@ import tensorflow as tf
 from Loader import DatasetLoader
 from models.BaseModel import BaseModel
 import tensorflow.contrib.slim as slim
+from tensorflow.contrib.slim.python.slim.nets import resnet_v1
 
-class MModel(BaseModel):
+class ResNet50(BaseModel):
     def __init__(self, data_loader, config):
-        super(MModel, self).__init__(config)
+        super(ResNet50, self).__init__(config)
         
         # Get the data_loader to make the joint of the inputs in the graph
         self.data_loader = data_loader
@@ -40,6 +41,7 @@ class MModel(BaseModel):
         """
         Inputs to the network
         """
+        print("input to resnet")
         with tf.variable_scope('inputs'):
             self.x, self.y = self.data_loader.get_input()
             self.is_training = tf.placeholder(tf.bool, name='Training_flag')
@@ -50,24 +52,39 @@ class MModel(BaseModel):
         """
         Network Architecture
         """
+        
+        print("network arch resnet")
         with tf.variable_scope('network'):
-            net = slim.conv2d(self.x, 20, [5,5], scope='conv1')
-            net = slim.max_pool2d(net, [2,2], scope='pool1')
-            net = slim.conv2d(net, 50, [5,5], scope='conv2')
-            net = slim.max_pool2d(net, [2,2], scope='pool2')
-            net = slim.flatten(net, scope='flatten3')
-            net = slim.fully_connected(net, 500, scope='fc4')
+            self.logits, end_points = resnet_v1.resnet_v1_50(inputs = self.x, num_classes = self.num_classes)
+            self.logits = tf.squeeze(self.logits, axis=[1,2])
             
+            print("network output resnet")
             with tf.variable_scope('out'):
-                self.out = slim.fully_connected(net, self.num_classes, activation_fn=None)
+                #self.out = tf.squeeze(end_points['predictions'], axis=[1,2])
+                self.out = tf.nn.softmax(self.logits, dim=-1)
             
             tf.add_to_collection('out', self.out)
             
+            print("Logits shape: ", self.logits.shape)
+            print("predictions out shape: ", self.out.shape)
+            
+            print("network output argmax resnet")
             with tf.variable_scope('out_argmax'):
-                self.out_argmax = tf.argmax(self.out, axis=-1, output_type=tf.int64, name='out_argmax')
+                self.out_argmax = tf.argmax(self.logits, axis=-1, output_type=tf.int64, name='out_argmax')
+                #self.out_argmax = tf.squeeze(tf.argmax(self.out, 1), axis=[1])
+                
+                print("Arg Max Shape: ", self.out_argmax.shape)
 
+        print("loss resnet")
         with tf.variable_scope('loss-acc'):
-            self.loss = tf.losses.sparse_softmax_cross_entropy(labels=self.y, logits=self.out)
+            #one_hot_y = tf.one_hot(indices=self.y, depth=self.num_classes)
+            
+            self.loss = tf.losses.sparse_softmax_cross_entropy(labels = self.y, logits = self.logits)
+            
+            
+            #probabilities = end_points['Predictions']
+            
+            #accuracy, accuracy_update = tf.metrics.accuracy(labels = one_hot_y, predictions = self.out_argmax)
             self.acc = tf.reduce_mean(tf.cast(tf.equal(self.y, self.out_argmax), tf.float32))
 
         with tf.variable_scope('train_step'):
