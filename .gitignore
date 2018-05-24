@@ -3,3 +3,4 @@ __pycache__/
 /summary/
 /logs/
 /checkpoints/
+/.ipynb_checkpoints/
