@@ -1,8 +1,8 @@
 class Config:
     
     # directories
-    summary_dir = "summary/LeNet"
-    checkpoint_dir = "checkpoints/c1"
+    summary_dir = "summary/alexnet"
+    checkpoint_dir = "checkpoints/alexnet"
     
     num_classes = 4
     
@@ -10,8 +10,8 @@ class Config:
     subset_size = 40
     
     
-    model_type = 'LeNet'
-    available_model_types = {'LeNet', 'ResNet50'}
+    model_type = 'AlexNet'
+    available_model_types = {'LeNet', 'ResNet50', 'AlexNet'}
     learning_rate = 1e-4
     train_val_split = 0.8
     batch_size = 8
