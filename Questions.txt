@@ -1,0 +1,7 @@
+To discuss with Magda:
+
+1) Augment - Extract Patches - repeat labels - shuffle ? - feed to the network in batches 
+
+2) Shall we stick to 224 patches? shall we then randomly sample (is this ok?) from the patches to threshold the number of patches per image? Currently 224x224 results in around 70 patches per image
+
+3) we need to feed the patches of a single image in one batch, right? no need to reshuffle?
