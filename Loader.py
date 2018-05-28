@@ -1,24 +1,43 @@
 import tensorflow as tf
 import numpy as np
-import glob
-from os import listdir
-from os.path import join
-from PIL import Image
+from utils.img_utils import read_images_labels, get_patches_from_images_tensor
 import logging
 import pprint
 
 class DatasetLoader:
     """
-    DataSetAPI - Load Imgs from the disk
+    
+    Loading images using the Dataset API
+    Two Datasets are initialized, one for training and one for validation
+    
     """
 
     def __init__(self, config):
         self.config = config
         
         if (config.train_on_subset):
-            images, labels = DatasetLoader.read_images_labels(n = int(self.config.subset_size/4))
+            images, labels = read_images_labels(n = int(self.config.subset_size/4))
         else:
-            images, labels = DatasetLoader.read_images_labels()
+            images, labels = read_images_labels()
+        
+        # How to integrate augmentation for original images before patching?
+        # * do that here before extracting patches
+        # * ???
+        
+        if (config.train_on_patches):
+            patches, n_patches = get_patches_from_images_tensor(images, size=(config.patch_size, config.patch_size))
+            print("Shape of patches: ", patches.shape)
+            print("Shape of labels: ", labels.shape)
+            print("Number of patches: ", n_patches)
+            
+            # repeat labels for patches
+            labels = np.asarray([l for l in labels for _ in range(n_patches)])
+            print("Shape of labels after patching: ", labels.shape)
+                                                     
+            # squeeze 1st and 2nd dimensions via reshape (this) or sampling (later)
+            images = tf.reshape(patches, shape=(-1, *patches.shape[2:]))
+            print("Shape of images after getting all patches: ", images.shape)
+            del patches
             
         n = labels.shape[0]
         
@@ -30,7 +49,7 @@ class DatasetLoader:
         
         self.train_dataset = tf.data.Dataset.from_tensor_slices((images[0:s], labels[0:s]))
         self.train_dataset = self.train_dataset.map(DatasetLoader.preprocess_train,
-                                                    num_parallel_calls = self.config.batch_size)
+                                                    num_parallel_calls = self.config.num_parallel_cores)
 
         self.train_dataset = self.train_dataset.shuffle(n, reshuffle_each_iteration = True)
         self.train_dataset = self.train_dataset.batch(self.config.batch_size)
@@ -44,7 +63,7 @@ class DatasetLoader:
         
         self.val_dataset = tf.data.Dataset.from_tensor_slices((images[s:], labels[s:]))
         self.val_dataset = self.val_dataset.map(DatasetLoader.preprocess_val,
-                                                    num_parallel_calls = self.config.batch_size)
+                                                    num_parallel_calls = self.config.num_parallel_cores)
 
         self.val_dataset = self.val_dataset.batch(self.config.batch_size)
                 
@@ -55,6 +74,8 @@ class DatasetLoader:
 
         self.num_iterations_train = self.len_x_train // self.config.batch_size
         self.num_iterations_val = self.len_x_val // self.config.batch_size
+        
+        del images, labels
         
     
     @staticmethod
@@ -71,27 +92,14 @@ class DatasetLoader:
             return tf.cast(img, tf.float32), tf.cast(label, tf.int64)
     
     @staticmethod
-    def read_images_labels(dir_names=["data/0_Benign_PNGs", "data/1_Cnormal_PNGs", "data/2_InSitu_PNGs",
-                                "data/3_Invasive_PNGs"], n = 100):
-        if (n > 100):
-            n = 100
-
-        images = []
-        labels = []
-        files_list = []
-        dir_listings = [glob.glob(join(x, '*.png')) for x in dir_names]
-
-        for d_list in dir_listings:
-            for file in d_list[:n]:
-                files_list.append(file)
-
-        for file in files_list:
-            im = np.asarray(Image.open(file))
-            label = int(len(images)/n)
-            images.append(im)
-            labels.append(label)
-
-        return np.asarray(images), np.asarray(labels)
+    def preprocess_patched_train(image, label):
+        # to be implemented if needed
+        return
+        
+    @staticmethod
+    def preprocess_patched_val(image, label):
+        # to be implemented if needed
+        return
 
     
     def initialize(self, sess, train = True):
