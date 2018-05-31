@@ -29,7 +29,7 @@ def main():
     logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.INFO, handlers=handlers)
     
     logging.info("Started Logging")
-    
+    logging.info(f"Number of cores: {pprint.pformat(Config.num_parallel_cores)}")
     logging.info(f"Type of Model: {pprint.pformat(Config.model_type)}")
     logging.info(f"Number of Epochs: {pprint.pformat(Config.num_epochs)}")
     logging.info(f"Learning Rate: {pprint.pformat(Config.learning_rate)}")
@@ -38,6 +38,9 @@ def main():
     
     logging.info(f"Training on Subset of the data: {pprint.pformat(Config.train_on_subset)}")
     logging.info(f"Training on Subset of size: {pprint.pformat(Config.subset_size)}")
+    
+    logging.info(f"Generating Patches: {pprint.pformat(Config.train_on_patches)}")
+    logging.info(f"Patch size (square): {pprint.pformat(Config.patch_size)}")
 
     # create tensorflow session
     sess = tf.Session()
