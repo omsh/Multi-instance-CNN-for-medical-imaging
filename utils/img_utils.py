@@ -5,6 +5,7 @@ from os.path import join
 from os import listdir
 import numpy as np
 import tensorflow as tf
+import random
 
 
 # Function to read the converted png images and labels from disk and return numpy arrays
@@ -38,6 +39,31 @@ def read_images_labels(dir_names=["data/0_Benign_PNGs", "data/1_Cnormal_PNGs", "
 
 # -------------------------------------------------------------------------------------
 
+# Function to split numpy arrays of images and labels with split a ratio
+# returns 4 arrays images, labels for train and val
+
+def split_train_val(images, labels, ratio = 0.8, pre_shuffle = True, seed = 1):
+        n = labels.shape[0]
+        s = int(n * ratio)
+        if (pre_shuffle):
+            images, labels = shuffle(images, labels, random_state = seed)
+        return images[:s], labels[:s], images[s:], labels[s:]
+    
+
+# -------------------------------------------------------------------------------------
+
+# Function to pre-augment whole images (needed before patching)
+
+    
+def pre_augment_images(images, angles=[0, 90, 180, 270]):
+    rotation_vector = [random.choice(angles) for _ in range(images.shape[0])]
+    rotation_vector = np.asarray(rotation_vector) * np.pi / 180
+    
+    with tf.Session() as sess:
+        images = tf.contrib.image.rotate(images, angles = rotation_vector)
+    return images
+# -------------------------------------------------------------------------------------
+
 # Function to create patches for a 4-D tensor of images:
 # args:
     # "images": 4-D tensor of shape: n_images X image_width X image_height X image_channels
@@ -47,8 +73,6 @@ def read_images_labels(dir_names=["data/0_Benign_PNGs", "data/1_Cnormal_PNGs", "
 # returns:
     # "patches": 5-D tensor of shape: n_images X n_patches_per_image X patch_width X patch_height X patch_channels   
     # "number_of_patches_per_image": actual number of patches per image
-    # "size_w": width of the patch
-    # "size_h": height of the patch
 
 def get_patches_from_images_tensor(images, size=(224, 224), n_patches=-1, delta=5):
     n = images.shape[0]
