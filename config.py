@@ -34,7 +34,7 @@ class Config:
     
     # Model parameters
     model_type = 'ResNet50'
-    available_model_types = {'LeNet', 'ResNet50'}
+    available_model_types = {'LeNet', 'ResNet50', 'AlexNet'}
     
     learning_rate = 1e-4
     batch_size = 128
