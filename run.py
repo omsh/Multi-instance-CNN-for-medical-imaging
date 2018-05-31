@@ -8,7 +8,7 @@ sys.path.extend(['..'])
 import tensorflow as tf
 
 from Loader import DatasetLoader
-from models import LeNet, ResNet50, AlexNet
+from models import LeNet, ResNet50, AlexNet, Inception
 from trainers.MTrainer import MTrainer
 
 from utils.logger import DefinedSummarizer
@@ -55,6 +55,8 @@ def main():
         model = ResNet50.ResNet50(data_loader, Config)
     elif(Config.model_type.lower() == 'alexnet'):
         model = AlexNet.AlexNet(data_loader, Config)
+    elif (Config.model_type.lower() == 'inception'):
+        model = Inception.Inception(data_loader, Config)
     else:
         model = LeNet.LeNet(data_loader, Config)
     
