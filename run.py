@@ -7,7 +7,7 @@ sys.path.extend(['..'])
 
 import tensorflow as tf
 
-from Loader import DatasetLoader
+from dataloaders import DatasetLoader, OnlineDatasetLoader, DatasetFileLoader
 from models import LeNet, ResNet50, AlexNet, Inception
 from trainers.MTrainer import MTrainer
 
@@ -30,9 +30,14 @@ def main():
     
     logging.info("Started Logging")
     logging.info(f"Number of cores: {pprint.pformat(Config.num_parallel_cores)}")
+    logging.info(f"Address of GPU used for training: {pprint.pformat(Config.gpu_address)}")
+    
+    logging.info(f"Type of DataLoader: {pprint.pformat(Config.dataloader_type)}")
+
     logging.info(f"Type of Model: {pprint.pformat(Config.model_type)}")
     logging.info(f"Number of Epochs: {pprint.pformat(Config.num_epochs)}")
-    logging.info(f"Learning Rate: {pprint.pformat(Config.learning_rate)}")
+    logging.info(f"Optimizer Type: {pprint.pformat(Config.optimizer_type)}")
+    logging.info(f"Optimizer parameters: {pprint.pformat(Config.optim_params)}")
     logging.info(f"Train/Validation split ratio: {pprint.pformat(Config.train_val_split)}")
     logging.info(f"Batch size: {pprint.pformat(Config.batch_size)}")
     
@@ -42,34 +47,43 @@ def main():
     logging.info(f"Generating Patches: {pprint.pformat(Config.train_on_patches)}")
     logging.info(f"Patch size (square): {pprint.pformat(Config.patch_size)}")
 
-    # create tensorflow session
-    sess = tf.Session()
-
     # create your data generator
-    data_loader = DatasetLoader(Config)
-
-    # create instance of the model you want
-    if (Config.model_type.lower() == 'lenet'):
-        model = LeNet.LeNet(data_loader, Config)
-    elif (Config.model_type.lower() == 'resnet50'):
-        model = ResNet50.ResNet50(data_loader, Config)
-    elif(Config.model_type.lower() == 'alexnet'):
-        model = AlexNet.AlexNet(data_loader, Config)
-    elif (Config.model_type.lower() == 'inception'):
-        model = Inception.Inception(data_loader, Config)
-    else:
-        model = LeNet.LeNet(data_loader, Config)
     
-    # create tensorboard logger
-    logger = DefinedSummarizer(sess, summary_dir = Config.summary_dir, 
-                               scalar_tags=['train/loss_per_epoch', 'train/acc_per_epoch',
-                                            'test/loss_per_epoch','test/acc_per_epoch'])
+    with tf.device("/cpu:0"):
+ 
+        if (Config.dataloader_type.lower() == 'onlinedatasetloader'):
+            data_loader = OnlineDatasetLoader.OnlineDatasetLoader(Config)
+        if (Config.dataloader_type.lower() == 'datasetfileloader'):
+            data_loader = DatasetFileLoader.DatasetFileLoader(Config)
+        else:
+            data_loader = DatasetLoader.DatasetLoader(Config)
 
-    # create trainer and path all previous components to it
-    trainer = MTrainer(sess, model, Config, logger, data_loader)
+    # create tensorflow session
+    
+    with tf.Session() as sess:
 
-    # here you train your model
-    trainer.train()
+        # create instance of the model you want
+        if (Config.model_type.lower() == 'lenet'):
+            model = LeNet.LeNet(data_loader, Config)
+        elif (Config.model_type.lower() == 'resnet50'):
+            model = ResNet50.ResNet50(data_loader, Config)
+        elif(Config.model_type.lower() == 'alexnet'):
+            model = AlexNet.AlexNet(data_loader, Config)
+        elif (Config.model_type.lower() == 'inception'):
+            model = Inception.Inception(data_loader, Config)
+        else:
+            model = LeNet.LeNet(data_loader, Config)
+
+        # create tensorboard logger
+        logger = DefinedSummarizer(sess, summary_dir = Config.summary_dir, 
+                                   scalar_tags=['train/loss_per_epoch', 'train/acc_per_epoch',
+                                                'test/loss_per_epoch','test/acc_per_epoch'])
+
+        # create trainer and path all previous components to it
+        trainer = MTrainer(sess, model, Config, logger, data_loader)
+
+        # here you train your model
+        trainer.train()
 
 
 if __name__ == '__main__':
