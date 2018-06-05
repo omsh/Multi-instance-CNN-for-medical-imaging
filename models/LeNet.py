@@ -1,5 +1,4 @@
 import tensorflow as tf
-from Loader import DatasetLoader
 from models.BaseModel import BaseModel
 import tensorflow.contrib.slim as slim
 
@@ -17,7 +16,6 @@ class LeNet(BaseModel):
         self.out_argmax = None
         self.loss = None
         self.acc = None
-        self.optimizer = None
         self.train_step = None
         self.num_classes = config.num_classes
 
