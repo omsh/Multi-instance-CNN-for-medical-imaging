@@ -1,8 +1,8 @@
 class Config:
 
     # directories
-    summary_dir = "summary/ResNet50_fastloader_with_patching_all"
-    checkpoint_dir = "checkpoints/ResNet50_fastloader_with_patching_all"
+    summary_dir = "summary/ResNet50_fastloader_with_patching_magda"
+    checkpoint_dir = "checkpoints/ResNet50_fastloader_with_patching_magda"
 
     # hardware parameters
     num_parallel_cores = 8
@@ -23,8 +23,8 @@ class Config:
     rotation_angles = [0, 90, 180, 270]
 
     # training on a subset of the data, for testing and prototyping
-    train_on_subset = False
-    subset_size = 200
+    train_on_subset = True
+    subset_size = 40
 
     # patch geneartion (currently on the fly, can be extended to save on the hard disk)
     train_on_patches = True
@@ -38,15 +38,13 @@ class Config:
     train_val_split = 0.75
 
     # Optimizer parameters
-    optimizer_type = 'MomentumOptimizer'
+    optimizer_type = 'Adam'
+    available_optimizers = {'Adam', 'GradientDescentOptimizer', 'MomentumOptimizer'}
     
     optim_params = {
-        'learning_rate': 1e-3,
-        'momentum' : 0.9
+        'learning_rate': 1e-3
     }
-    
-    available_optimizers = {'Adam', 'GradientDescentOptimizer', 'MomentumOptimizer'}
-
+       
     # Model parameters
     model_type = 'ResNet50'
     available_model_types = {'LeNet', 'ResNet50', 'AlexNet', 'Inception'}
