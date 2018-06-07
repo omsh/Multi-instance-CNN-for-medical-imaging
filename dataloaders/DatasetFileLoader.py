@@ -41,9 +41,9 @@ class DatasetFileLoader:
         n = train_images.shape[0]
         n_val = val_images.shape[0]
         
-        self.train_dataset = tf.data.Dataset.from_tensor_slices((train_images, train_labels))
+        self.train_dataset = tf.data.Dataset.from_tensor_slices((train_images, train_labels)).shuffle(n)
         
-        self.train_dataset = self.train_dataset.shuffle(n, reshuffle_each_iteration = False).repeat()
+        #self.train_dataset = self.train_dataset.shuffle(n, reshuffle_each_iteration = False)
         
         self.train_dataset = self.train_dataset.map(self.read_images,
                                                  num_parallel_calls = self.config.num_parallel_cores)
@@ -71,7 +71,7 @@ class DatasetFileLoader:
         
         # validation dataset
         
-        self.val_dataset = tf.data.Dataset.from_tensor_slices((val_images, val_labels)).shuffle(n_val).repeat()
+        self.val_dataset = tf.data.Dataset.from_tensor_slices((val_images, val_labels)).shuffle(n_val)
         self.val_dataset = self.val_dataset.map(self.read_images,
                                                     num_parallel_calls = self.config.num_parallel_cores)
         
@@ -139,28 +139,7 @@ class DatasetFileLoader:
         
         return image, tf.cast(label, tf.int64)
     
-    
     def get_patches(self, images, labels):
-        images, n_patches = extract_patches_from_tensor(images, size=(self.config.patch_size, self.config.patch_size))
-        
-        logging.info(f"Shape of patches: {pprint.pformat(images.shape)}")
-        logging.info(f"Shape of labels: {pprint.pformat(labels.shape)}")
-        logging.info(f"Number of patches extracted: {pprint.pformat(n_patches)}")        
-                                                     
-        # squeeze 1st and 2nd dimensions via reshape or sampling
-                            
-        labels = tf.tile(labels, [n_patches])
-            
-        logging.info(f"Shape of labels after patching (repeat): {pprint.pformat(labels.shape)}")
-            
-        images = tf.reshape(images, shape=(-1, self.config.patch_size, self.config.patch_size, 3))
-        
-        images = tf.image.resize_images(images, [224, 224])
-        
-        return tf.cast(images, dtype = tf.float32), labels
-    
-    
-    def get_patches_to_fix(self, images, labels):
         images, n_patches = extract_patches_from_tensor(images, size=(self.config.patch_size, self.config.patch_size))
         
         logging.info(f"Shape of patches: {pprint.pformat(images.shape)}")
@@ -180,11 +159,10 @@ class DatasetFileLoader:
             
             images, labels = tf.cond(tf.greater(tf.shape(images)[1], self.config.pick_n_random_patches),
                              lambda: (tf.map_fn(lambda x: x[start_patch_i[0] : end_patch_i[0], :, :], images),
-                                     tf.tile(labels, [self.config.pick_n_random_patches])), 
+                                     tf.reshape(tf.map_fn(lambda x: tf.tile([x], [self.config.pick_n_random_patches]), labels), shape=(-1,))), 
                              lambda: (images, labels))
         else:
-            print("Hello I am inside else..................")
-            labels = tf.tile(labels, [n_patches])
+            labels = tf.reshape(tf.map_fn(lambda x: tf.tile([x], [n_patches]), labels), shape=(-1,))
             
         logging.info(f"Shape of labels after patching (repeat): {pprint.pformat(labels.shape)}")
             
