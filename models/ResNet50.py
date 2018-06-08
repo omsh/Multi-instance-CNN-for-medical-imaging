@@ -1,8 +1,10 @@
 import tensorflow as tf
-from Loader import DatasetLoader
 from models.BaseModel import BaseModel
 import tensorflow.contrib.slim as slim
 from tensorflow.contrib.slim.python.slim.nets import resnet_v1
+import logging
+import pprint
+
 
 class ResNet50(BaseModel):
     def __init__(self, data_loader, config):
@@ -18,7 +20,6 @@ class ResNet50(BaseModel):
         self.out_argmax = None
         self.loss = None
         self.acc = None
-        self.optimizer = None
         self.train_step = None
         self.num_classes = config.num_classes
 
@@ -41,7 +42,6 @@ class ResNet50(BaseModel):
         """
         Inputs to the network
         """
-        print("input to resnet")
         with tf.variable_scope('inputs'):
             self.x, self.y = self.data_loader.get_input()
             self.is_training = tf.placeholder(tf.bool, name='Training_flag')
@@ -53,12 +53,10 @@ class ResNet50(BaseModel):
         Network Architecture
         """
         
-        print("network arch resnet")
         with tf.variable_scope('network'):
             self.logits, end_points = resnet_v1.resnet_v1_50(inputs = self.x, num_classes = self.num_classes)
             self.logits = tf.squeeze(self.logits, axis=[1,2])
             
-            print("network output resnet")
             with tf.variable_scope('out'):
                 #self.out = tf.squeeze(end_points['predictions'], axis=[1,2])
                 self.out = tf.nn.softmax(self.logits, dim=-1)
@@ -75,7 +73,6 @@ class ResNet50(BaseModel):
                 
                 print("Arg Max Shape: ", self.out_argmax.shape)
 
-        print("loss resnet")
         with tf.variable_scope('loss-acc'):
             #one_hot_y = tf.one_hot(indices=self.y, depth=self.num_classes)
             
@@ -88,7 +85,7 @@ class ResNet50(BaseModel):
             self.acc = tf.reduce_mean(tf.cast(tf.equal(self.y, self.out_argmax), tf.float32))
 
         with tf.variable_scope('train_step'):
-            self.optimizer = tf.train.AdamOptimizer(self.config.learning_rate)
+            #self.optimizer = tf.train.AdamOptimizer(self.config.learning_rate)
             update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
             with tf.control_dependencies(update_ops):
                 self.train_step = self.optimizer.minimize(self.loss, global_step=self.global_step_tensor)

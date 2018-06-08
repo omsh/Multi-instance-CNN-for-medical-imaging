@@ -1,41 +1,71 @@
 import glob
 from PIL import Image
 from sklearn.utils import shuffle
+from sklearn.preprocessing import LabelEncoder
 from os.path import join
 from os import listdir
 import numpy as np
 import tensorflow as tf
 import random
+import ntpath
+import re
+
+
+def get_images_pathlist_labels(dir_names=["data/0_Benign_PNGs", "data/1_Cnormal_PNGs", "data/2_InSitu_PNGs",
+                            "data/3_Invasive_PNGs"], n = 100, pre_shuffle = True, seed = 1):
+    if (n > 100):
+        n = 100
+
+    labels = []
+    files_list = []
+    dir_listings = [glob.glob(join(x, '*.png')) for x in dir_names]
+
+    for d_list in dir_listings:
+        for file in d_list[:n]:
+            files_list.append(file)
+            label = re.search("^[a-z]*", ntpath.basename(file))
+            labels.append(label.group(0))
+
+    le = LabelEncoder()
+    labels = le.fit_transform(labels)
+    
+    files_list, labels = np.asarray(files_list), np.asarray(labels)
+
+    if (pre_shuffle):
+        files_list, labels = shuffle(files_list, labels, random_state = seed)
+
+    return files_list, labels
+        
 
 
 # Function to read the converted png images and labels from disk and return numpy arrays
 
 def read_images_labels(dir_names=["data/0_Benign_PNGs", "data/1_Cnormal_PNGs", "data/2_InSitu_PNGs",
-                                "data/3_Invasive_PNGs"], n = 100, pre_shuffle = True, seed = 1):
-        if (n > 100):
-            n = 100
+                            "data/3_Invasive_PNGs"], n = 100, pre_shuffle = True, seed = 1):
+    if (n > 100):
+        n = 100
 
-        images = []
-        labels = []
-        files_list = []
-        dir_listings = [glob.glob(join(x, '*.png')) for x in dir_names]
+    images = []
+    labels = []
+    files_list = []
+    dir_listings = [glob.glob(join(x, '*.png')) for x in dir_names]
 
-        for d_list in dir_listings:
-            for file in d_list[:n]:
-                files_list.append(file)
+    for d_list in dir_listings:
+        for file in d_list[:n]:
+            files_list.append(file)
 
-        for file in files_list:
-            im = np.asarray(Image.open(file))
-            label = int(len(images)/n)
-            images.append(im)
-            labels.append(label)
-        
-        images, labels = np.asarray(images), np.asarray(labels)
-        
-        if (pre_shuffle):
-            images, labels = shuffle(images, labels, random_state = seed)
-            
-        return images, labels 
+    for file in files_list:
+        im = np.asarray(Image.open(file))
+        label = int(len(images)/n)
+        images.append(im)
+        labels.append(label)
+
+    images, labels = np.asarray(images), np.asarray(labels)
+
+    if (pre_shuffle):
+        images, labels = shuffle(images, labels, random_state = seed)
+
+    return images, labels 
 
 # -------------------------------------------------------------------------------------
 
@@ -58,10 +88,28 @@ def split_train_val(images, labels, ratio = 0.8, pre_shuffle = True, seed = 1):
 def pre_augment_images(images, angles=[0, 90, 180, 270]):
     rotation_vector = [random.choice(angles) for _ in range(images.shape[0])]
     rotation_vector = np.asarray(rotation_vector) * np.pi / 180
-    
-    with tf.Session() as sess:
-        images = tf.contrib.image.rotate(images, angles = rotation_vector)
+    images = tf.contrib.image.rotate(images, angles = rotation_vector)
     return images
+
+
+
+def rotate_images(images, angles = [0, 90, 180, 270]):
+    X_rotate = []
+    angles = np.array(angles) / 90
+    tf.reset_default_graph()
+    X = tf.placeholder(tf.float32, shape = (images.shape[1], images.shape[2], 3))
+    k = tf.placeholder(tf.int32)
+    tf_img = tf.image.rot90(X, k = k)
+    with tf.Session() as sess:
+        sess.run(tf.global_variables_initializer())
+        for img in images:
+            rotated_img = sess.run(tf_img, feed_dict = {X: img, k: random.choice(angles)})
+            X_rotate.append(rotated_img)
+        
+    X_rotate = np.array(X_rotate, dtype = np.float32)
+    return X_rotate
+
+
 # -------------------------------------------------------------------------------------
 
 # Function to create patches for a 4-D tensor of images:
@@ -103,7 +151,25 @@ def get_patches_from_images_tensor(images, size=(224, 224), n_patches=-1, delta=
                                               [1, 1, 1, 1],
                                               "SAME")
 
+        print("Patches  shape before failing: ", patches.shape)
         new_shape = (n, -1, size_w, size_h, 3)
         patches = tf.reshape(patches, shape=new_shape) 
         number_of_patches_per_image = patches.shape[1]
+    return patches, number_of_patches_per_image
+
+
+def extract_patches_from_tensor(images, size=(224, 224)):
+    n = tf.shape(images)[0]
+    
+    size_w, size_h = size
+    patches = tf.extract_image_patches(images,
+                                       [1, size_w, size_h, 1],
+                                       [1, size_w, size_h, 1],
+                                       [1, 1, 1, 1],
+                                       "SAME")
+    
+    new_shape = (n, -1, size_w, size_h, 3)
+    patches = tf.reshape(patches, shape=new_shape) 
+    number_of_patches_per_image = tf.shape(patches)[1]
+    
     return patches, number_of_patches_per_image

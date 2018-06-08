@@ -1,7 +1,7 @@
 import tensorflow as tf
 import numpy as np
 
-from utils.img_utils import read_images_labels, get_patches_from_images_tensor, split_train_val, pre_augment_images
+from utils.img_utils import read_images_labels, get_patches_from_images_tensor, split_train_val, pre_augment_images, rotate_images
 
 import logging
 import pprint
@@ -38,7 +38,7 @@ class DatasetLoader:
         
         
         if (config.train_on_patches):
-            train_images = pre_augment_images(train_images,
+            train_images = rotate_images(train_images,
                                               angles = self.config.rotation_angles)
             
             train_images, train_labels = DatasetLoader.convert_to_patches_repeat_labels(train_images,
@@ -65,6 +65,7 @@ class DatasetLoader:
 
         self.train_dataset = self.train_dataset.shuffle(n, reshuffle_each_iteration = False)
         self.train_dataset = self.train_dataset.batch(self.config.batch_size)
+        self.train_dataset = self.train_dataset.prefetch(1)
 
         self.iterator = tf.data.Iterator.from_structure(self.train_dataset.output_types,
                                                            self.train_dataset.output_shapes)
@@ -78,6 +79,7 @@ class DatasetLoader:
                                                     num_parallel_calls = self.config.num_parallel_cores)
 
         self.val_dataset = self.val_dataset.batch(self.config.batch_size)
+        self.val_dataset = self.val_dataset.prefetch(1)
                 
         self.val_init_op = self.iterator.make_initializer(self.val_dataset)
         
@@ -95,7 +97,7 @@ class DatasetLoader:
         #img = tf.random_crop(image, [224, 224, 3])
         img = tf.image.resize_image_with_crop_or_pad(image, 224, 224)
         if (not self.config.train_on_patches):
-            n_times_90 = int(random.choice[np.array(self.config.rotation_angles, dtype=np.int16) / 90])
+            n_times_90 = int(random.choice([np.array(self.config.rotation_angles, dtype=np.int16) / 90]))
             img = tf.image.rot90(img, k = n_times_90)
         return tf.cast(img, tf.float32), tf.cast(label, tf.int64)
     

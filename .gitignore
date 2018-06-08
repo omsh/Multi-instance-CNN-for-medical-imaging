@@ -4,3 +4,5 @@ __pycache__/
 /logs/
 /checkpoints/
 /.ipynb_checkpoints/
+*.ipynb
+/dataloaders/.ipynb_checkpoints/

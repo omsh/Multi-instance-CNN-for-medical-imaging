@@ -1,5 +1,4 @@
 import tensorflow as tf
-from Loader import DatasetLoader
 from models.BaseModel import BaseModel
 import tensorflow.contrib.slim as slim
 
@@ -17,7 +16,6 @@ class LeNet(BaseModel):
         self.out_argmax = None
         self.loss = None
         self.acc = None
-        self.optimizer = None
         self.train_step = None
         self.num_classes = config.num_classes
 
@@ -71,7 +69,6 @@ class LeNet(BaseModel):
             self.acc = tf.reduce_mean(tf.cast(tf.equal(self.y, self.out_argmax), tf.float32))
 
         with tf.variable_scope('train_step'):
-            self.optimizer = tf.train.AdamOptimizer(self.config.learning_rate)
             update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
             with tf.control_dependencies(update_ops):
                 self.train_step = self.optimizer.minimize(self.loss, global_step=self.global_step_tensor)

@@ -15,6 +15,14 @@ class BaseModel:
         self.init_global_step()
         # init the epoch counter
         self.init_cur_epoch()
+        
+        # init optimizer
+        if (self.config.optimizer_type == 'Adam'):
+            self.optimizer = tf.train.AdamOptimizer(**self.config.optim_params)
+        elif (self.config.optimizer_type == 'MomentumOptimizer'):
+            self.optimizer = tf.train.MomentumOptimizer(**self.config.optim_params)
+        else:
+            self.optimizer = tf.train.GradientDescentOptimizer(**self.config.optim_params)
 
         # save attribute .. NOTE DON'T FORGET TO CONSTRUCT THE SAVER ON YOUR MODEL
         self.saver = None

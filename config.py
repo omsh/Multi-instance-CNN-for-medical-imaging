@@ -1,11 +1,17 @@
 class Config:
 
     # directories
-    summary_dir = "summary/ResNext"
-    checkpoint_dir = "checkpoints/c1"
+    summary_dir = "summary/ResNet50_fastloader_with_patching_magda"
+    checkpoint_dir = "checkpoints/ResNet50_fastloader_with_patching_magda"
 
     # hardware parameters
     num_parallel_cores = 8
+    
+    gpu_address = '/device:GPU:0'
+    
+    # DataLoader parameters
+    dataloader_type = 'DatasetFileLoader'
+    available_dataloader_types = {'DatasetLoader', 'DatasetFileLoader'}
 
     # Dataset parameters
     num_classes = 4
@@ -21,24 +27,44 @@ class Config:
     subset_size = 40
 
     # patch geneartion (currently on the fly, can be extended to save on the hard disk)
+<<<<<<< HEAD
     train_on_patches = False
     patch_size = 224
 
     # patch sampling (not used yet)
     n_patches_to_sample_per_image = 32
+=======
+    train_on_patches = True
+    patch_size = 672
+    
+    pick_random_patches = False
+    pick_n_random_patches = 12
+    random_seed = 1
+>>>>>>> develop
 
     # Training parameters
-    train_val_split = 0.8
+    train_val_split = 0.75
 
     # Optimizer parameters
-
+    optimizer_type = 'Adam'
+    available_optimizers = {'Adam', 'GradientDescentOptimizer', 'MomentumOptimizer'}
+    
+    optim_params = {
+        'learning_rate': 1e-3
+    }
+       
     # Model parameters
+<<<<<<< HEAD
     model_type = 'ResNeXt'
     available_model_types = {'LeNet', 'ResNet50', 'AlexNet', 'Inception', 'ResNeXt'}
+=======
+    model_type = 'ResNet50'
+    available_model_types = {'LeNet', 'ResNet50', 'AlexNet', 'Inception'}
+>>>>>>> develop
 
-    learning_rate = 1e-4
-    batch_size = 128
-    num_epochs = 2
+    
+    batch_size = 5
+    num_epochs = 20
 
     # Model saving parameters
     max_to_keep = 1
