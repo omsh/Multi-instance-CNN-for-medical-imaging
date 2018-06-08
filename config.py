@@ -24,10 +24,10 @@ class Config:
 
     # training on a subset of the data, for testing and prototyping
     train_on_subset = True
-    subset_size = 40
+    subset_size = 4
 
     # patch geneartion (currently on the fly, can be extended to save on the hard disk)
-    train_on_patches = True
+    train_on_patches = False
     patch_size = 672
     
     pick_random_patches = False
@@ -47,16 +47,10 @@ class Config:
     }
        
     # Model parameters
-<<<<<<< HEAD
     model_type = 'ResNeXt'
     available_model_types = {'LeNet', 'ResNet50', 'AlexNet', 'Inception', 'ResNeXt'}
-=======
-    model_type = 'ResNet50'
-    available_model_types = {'LeNet', 'ResNet50', 'AlexNet', 'Inception'}
->>>>>>> develop
-
     
-    batch_size = 5
+    batch_size = 1
     num_epochs = 20
 
     # Model saving parameters

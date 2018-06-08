@@ -1,8 +1,13 @@
+# For installing tflearn: https://stackoverflow.com/questions/48821174/how-to-install-tflearn-module-on-anaconda-distribution-in-windows-10
+
 import tensorflow as tf
+import numpy as np
 from dataloaders import DatasetLoader, DatasetFileLoader
 from models.BaseModel import BaseModel
-import tensorflow.contrib.slim as slim
-from tensorflow.contrib.slim.python.slim.nets import alexnet
+from tensorflow.contrib.framework import arg_scope
+from tflearn.layers.conv import global_avg_pool
+from tensorflow.contrib.layers import batch_norm, flatten
+
 
 def conv_layer(input, filter, kernel, stride, padding='SAME', layer_name="conv"):
     with tf.name_scope(layer_name):
@@ -33,13 +38,13 @@ def Relu(x):
 def Concatenation(layers) :
     return tf.concat(layers, axis=3)
 
-def Linear(x) :
+def Linear(x, class_num):
     return tf.layers.dense(inputs=x, use_bias=False, units=class_num, name='linear')
 
 
 class ResNeXt(BaseModel):
     def __init__(self, data_loader, config):
-        super(ResNext, self).__init__(config)
+        super(ResNeXt, self).__init__(config)
 
         # Get the data_loader to make the joint of the inputs in the graph
         self.data_loader = data_loader
@@ -51,11 +56,11 @@ class ResNeXt(BaseModel):
         self.out_argmax = None
         self.loss = None
         self.acc = None
-        self.optimizer = None
         self.train_step = None
         self.num_classes = config.num_classes
         self.cardinality = 8  # how many split ?
         self.blocks = 3  # res_block ! (split + transition)
+        self.depth = 64 # out channel
 
         self.build_model()
         self.init_saver()
@@ -98,7 +103,7 @@ class ResNeXt(BaseModel):
 
             x = Global_Average_Pooling(x)
             x = flatten(x)
-            self.logits = Linear(x)
+            self.logits = Linear(x, self.num_classes)
 
             print("network output ResNeXt")
             with tf.variable_scope('out'):
@@ -129,7 +134,6 @@ class ResNeXt(BaseModel):
             self.acc = tf.reduce_mean(tf.cast(tf.equal(self.y, self.out_argmax), tf.float32))
 
         with tf.variable_scope('train_step'):
-            self.optimizer = tf.train.AdamOptimizer(self.config.learning_rate)
             update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
             with tf.control_dependencies(update_ops):
                 self.train_step = self.optimizer.minimize(self.loss, global_step=self.global_step_tensor)
@@ -148,25 +152,25 @@ class ResNeXt(BaseModel):
     def first_layer(self, x, scope):
         with tf.name_scope(scope) :
             x = conv_layer(x, filter=64, kernel=[3, 3], stride=1, layer_name=scope+'_conv1')
-            x = Batch_Normalization(x, training=self.training, scope=scope+'_batch1')
+            x = Batch_Normalization(x, training=self.is_training, scope=scope+'_batch1')
             x = Relu(x)
             return x
 
     def transform_layer(self, x, stride, scope):
         with tf.name_scope(scope) :
-            x = conv_layer(x, filter=depth, kernel=[1,1], stride=stride, layer_name=scope+'_conv1')
-            x = Batch_Normalization(x, training=self.training, scope=scope+'_batch1')
+            x = conv_layer(x, filter=self.depth, kernel=[1,1], stride=stride, layer_name=scope+'_conv1')
+            x = Batch_Normalization(x, training=self.is_training, scope=scope+'_batch1')
             x = Relu(x)
 
-            x = conv_layer(x, filter=depth, kernel=[3,3], stride=1, layer_name=scope+'_conv2')
-            x = Batch_Normalization(x, training=self.training, scope=scope+'_batch2')
+            x = conv_layer(x, filter=self.depth, kernel=[3,3], stride=1, layer_name=scope+'_conv2')
+            x = Batch_Normalization(x, training=self.is_training, scope=scope+'_batch2')
             x = Relu(x)
             return x
 
     def transition_layer(self, x, out_dim, scope):
         with tf.name_scope(scope):
             x = conv_layer(x, filter=out_dim, kernel=[1,1], stride=1, layer_name=scope+'_conv1')
-            x = Batch_Normalization(x, training=self.training, scope=scope+'_batch1')
+            x = Batch_Normalization(x, training=self.is_training, scope=scope+'_batch1')
             # x = Relu(x)
             return x
 

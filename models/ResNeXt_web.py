@@ -1,5 +1,4 @@
 import tensorflow as tf
-from tflearn.layers.conv import global_avg_pool
 from tensorflow.contrib.layers import batch_norm, flatten
 from tensorflow.contrib.framework import arg_scope
 import numpy as np
