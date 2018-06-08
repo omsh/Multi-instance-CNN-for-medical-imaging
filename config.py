@@ -47,8 +47,13 @@ class Config:
     }
        
     # Model parameters
-    model_type = 'LeNet'
+<<<<<<< HEAD
+    model_type = 'ResNeXt'
     available_model_types = {'LeNet', 'ResNet50', 'AlexNet', 'Inception', 'ResNeXt'}
+=======
+    model_type = 'ResNet50'
+    available_model_types = {'LeNet', 'ResNet50', 'AlexNet', 'Inception'}
+>>>>>>> develop
 
     
     batch_size = 5
