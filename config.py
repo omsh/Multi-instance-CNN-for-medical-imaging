@@ -21,7 +21,7 @@ class Config:
     subset_size = 40
 
     # patch geneartion (currently on the fly, can be extended to save on the hard disk)
-    train_on_patches = True
+    train_on_patches = False
     patch_size = 224
 
     # patch sampling (not used yet)
@@ -33,8 +33,8 @@ class Config:
     # Optimizer parameters
 
     # Model parameters
-    model_type = 'Inception'
-    available_model_types = {'LeNet', 'ResNet50', 'AlexNet', 'Inception'}
+    model_type = 'ResNeXt'
+    available_model_types = {'LeNet', 'ResNet50', 'AlexNet', 'Inception', 'ResNeXt'}
 
     learning_rate = 1e-4
     batch_size = 128

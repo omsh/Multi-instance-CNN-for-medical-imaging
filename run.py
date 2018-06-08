@@ -55,8 +55,10 @@ def main():
         model = ResNet50.ResNet50(data_loader, Config)
     elif(Config.model_type.lower() == 'alexnet'):
         model = AlexNet.AlexNet(data_loader, Config)
-    elif (Config.model_type.lower() == 'inception'):
+    elif(Config.model_type.lower() == 'inception'):
         model = Inception.Inception(data_loader, Config)
+    elif (Config.model_type.lower() == 'resnext'):
+        model = ResNeXt.ResNeXt(data_loader, Config)
     else:
         model = LeNet.LeNet(data_loader, Config)
     
