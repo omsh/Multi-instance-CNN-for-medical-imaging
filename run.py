@@ -7,8 +7,8 @@ sys.path.extend(['..'])
 
 import tensorflow as tf
 
-from dataloaders import DatasetLoader, OnlineDatasetLoader, DatasetFileLoader
-from models import LeNet, ResNet50, AlexNet, Inception
+from dataloaders import DatasetLoader, DatasetFileLoader
+from models import LeNet, ResNet50, AlexNet, Inception, ResNeXt
 from trainers.MTrainer import MTrainer
 
 from utils.logger import DefinedSummarizer
@@ -48,7 +48,7 @@ def main():
     logging.info(f"Patch size (square): {pprint.pformat(Config.patch_size)}")
 
     # create your data generator
-<<<<<<< HEAD
+
     data_loader = DatasetLoader(Config)
 
     # create instance of the model you want
@@ -60,10 +60,11 @@ def main():
         model = AlexNet.AlexNet(data_loader, Config)
     elif (Config.model_type.lower() == 'inception'):
         model = Inception.Inception(data_loader, Config)
+    elif (Config.model_type.lower() == 'resnext'):
+        model = ResNext.ResNeXt(data_loader, Config)
     else:
         model = LeNet.LeNet(data_loader, Config)
-=======
->>>>>>> develop
+
     
     with tf.device("/cpu:0"):
  
@@ -87,6 +88,8 @@ def main():
             model = AlexNet.AlexNet(data_loader, Config)
         elif (Config.model_type.lower() == 'inception'):
             model = Inception.Inception(data_loader, Config)
+        elif (Config.model_type.lower() == 'resnext'):
+            model = ResNext.ResNeXt(data_loader, Config)
         else:
             model = LeNet.LeNet(data_loader, Config)
 

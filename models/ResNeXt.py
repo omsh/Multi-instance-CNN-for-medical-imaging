@@ -1,5 +1,5 @@
 import tensorflow as tf
-from Loader import DatasetLoader
+from dataloaders import DatasetLoader, DatasetFileLoader
 from models.BaseModel import BaseModel
 import tensorflow.contrib.slim as slim
 from tensorflow.contrib.slim.python.slim.nets import alexnet
@@ -54,6 +54,8 @@ class ResNeXt(BaseModel):
         self.optimizer = None
         self.train_step = None
         self.num_classes = config.num_classes
+        self.cardinality = 8  # how many split ?
+        self.blocks = 3  # res_block ! (split + transition)
 
         self.build_model()
         self.init_saver()
@@ -90,9 +92,9 @@ class ResNeXt(BaseModel):
         with tf.variable_scope('network'):
 
             input_x = self.first_layer(self.x, scope='first_layer')
-            x = self.residual_layer(input_x, out_dim=64, layer_num='1')
-            x = self.residual_layer(x, out_dim=128, layer_num='2')
-            x = self.residual_layer(x, out_dim=256, layer_num='3')
+            x = self.residual_layer(input_x, out_dim=64, layer_num='1', res_block=self.blocks)
+            x = self.residual_layer(x, out_dim=128, layer_num='2', res_block=self.blocks)
+            x = self.residual_layer(x, out_dim=256, layer_num='3', res_block=self.blocks)
 
             x = Global_Average_Pooling(x)
             x = flatten(x)
@@ -148,7 +150,6 @@ class ResNeXt(BaseModel):
             x = conv_layer(x, filter=64, kernel=[3, 3], stride=1, layer_name=scope+'_conv1')
             x = Batch_Normalization(x, training=self.training, scope=scope+'_batch1')
             x = Relu(x)
-
             return x
 
     def transform_layer(self, x, stride, scope):
@@ -167,19 +168,18 @@ class ResNeXt(BaseModel):
             x = conv_layer(x, filter=out_dim, kernel=[1,1], stride=1, layer_name=scope+'_conv1')
             x = Batch_Normalization(x, training=self.training, scope=scope+'_batch1')
             # x = Relu(x)
-
             return x
 
     def split_layer(self, input_x, stride, layer_name):
         with tf.name_scope(layer_name) :
             layers_split = list()
-            for i in range(cardinality) :
+            for i in range(self.cardinality):
                 splits = self.transform_layer(input_x, stride=stride, scope=layer_name + '_splitN_' + str(i))
                 layers_split.append(splits)
 
             return Concatenation(layers_split)
 
-    def residual_layer(self, input_x, out_dim, layer_num, res_block=blocks):
+    def residual_layer(self, input_x, out_dim, layer_num, res_block):
         # split + transform(bottleneck) + transition + merge
 
         for i in range(res_block):
