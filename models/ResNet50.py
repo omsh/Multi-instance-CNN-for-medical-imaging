@@ -34,8 +34,8 @@ class ResNet50(BaseModel):
         """
         Helper Variables
         """
-        self.global_step_tensor = tf.Variable(0, trainable=False, name='global_step')
-        self.global_step_inc = self.global_step_tensor.assign(self.global_step_tensor + 1)
+        #self.global_step_tensor = tf.Variable(0, trainable=False, name='global_step')
+        #self.global_step_inc = self.global_step_tensor.assign(self.global_step_tensor + 1)
         self.global_epoch_tensor = tf.Variable(0, trainable=False, name='global_epoch')
         self.global_epoch_inc = self.global_epoch_tensor.assign(self.global_epoch_tensor + 1)
         
@@ -85,7 +85,6 @@ class ResNet50(BaseModel):
             self.acc = tf.reduce_mean(tf.cast(tf.equal(self.y, self.out_argmax), tf.float32))
 
         with tf.variable_scope('train_step'):
-            #self.optimizer = tf.train.AdamOptimizer(self.config.learning_rate)
             update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
             with tf.control_dependencies(update_ops):
                 self.train_step = self.optimizer.minimize(self.loss, global_step=self.global_step_tensor)
