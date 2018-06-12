@@ -16,13 +16,12 @@ class BaseModel:
         # init the epoch counter
         self.init_cur_epoch()
         
+        self.init_lr_scheduler()
+
         # init optimizer
-        if (self.config.optimizer_type == 'Adam'):
-            self.optimizer = tf.train.AdamOptimizer(**self.config.optim_params)
-        elif (self.config.optimizer_type == 'MomentumOptimizer'):
-            self.optimizer = tf.train.MomentumOptimizer(**self.config.optim_params)
-        else:
-            self.optimizer = tf.train.GradientDescentOptimizer(**self.config.optim_params)
+        self.init_optimizer()
+        
+        # init lr scheduler
 
         # save attribute .. NOTE DON'T FORGET TO CONSTRUCT THE SAVER ON YOUR MODEL
         self.saver = None
@@ -40,7 +39,7 @@ class BaseModel:
             print("Loading model checkpoint {} ...\n".format(latest_checkpoint))
             self.saver.restore(sess, latest_checkpoint)
             print("Model loaded")
-
+    
     # just initialize a tensorflow variable to use it as epoch counter
     def init_cur_epoch(self):
         with tf.variable_scope('cur_epoch'):
@@ -54,7 +53,35 @@ class BaseModel:
             self.global_step_tensor = tf.Variable(0, trainable=False, name='global_step')
             # this operator if you wanna increment the global_step_tensor by yourself instead of incrementing it
             # by .minimize function in the optimizers of tensorflow
-            self.increment_global_step_tensor = tf.assign(self.global_step_tensor, self.global_step_tensor + 1)
+            #self.increment_global_step_tensor = tf.assign(self.global_step_tensor, self.global_step_tensor + 1)
+    
+    def init_lr_scheduler(self):
+        if (self.config.lr_scheduler_type == 'exponential_decay'):
+            self.config.optim_params['learning_rate'] = tf.train.exponential_decay(**self.config.lr_scheduler_params,
+                                                  global_step = self.global_step_tensor)
+            
+        elif (self.config.lr_scheduler_type == 'natural_exp_decay'):
+            self.config.optim_params['learning_rate'] = tf.train.natural_exp_decay(**self.config.lr_scheduler_params,
+                                                  global_step = self.global_step_tensor)
+            
+        elif (self.config.lr_scheduler_type == 'inverse_time_decay'):
+            self.config.optim_params['learning_rate'] = tf.train.inverse_time_decay(**self.config.lr_scheduler_params,
+                                                  global_step = self.global_step_tensor)
+        else:
+            return
+
+            
+    def init_optimizer(self):
+        
+        if (self.config.optimizer_type == 'Adam'):
+            self.optimizer = tf.train.AdamOptimizer(**self.config.optim_params)
+        elif (self.config.optimizer_type == 'MomentumOptimizer'):
+            self.optimizer = tf.train.MomentumOptimizer(**self.config.optim_params)
+        else:
+            self.optimizer = tf.train.GradientDescentOptimizer(**self.config.optim_params)
+            
+                
+            
 
     def init_saver(self):
         # just copy the following line in your child class
