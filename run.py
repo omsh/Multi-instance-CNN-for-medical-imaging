@@ -7,7 +7,7 @@ sys.path.extend(['..'])
 
 import tensorflow as tf
 
-from dataloaders import DatasetLoader, OnlineDatasetLoader, DatasetFileLoader
+from dataloaders import DatasetLoader, DatasetFileLoader
 from models import LeNet, ResNet50, AlexNet, Inception
 from trainers.MTrainer import MTrainer
 
@@ -38,6 +38,8 @@ def main():
     logging.info(f"Number of Epochs: {pprint.pformat(Config.num_epochs)}")
     logging.info(f"Optimizer Type: {pprint.pformat(Config.optimizer_type)}")
     logging.info(f"Optimizer parameters: {pprint.pformat(Config.optim_params)}")
+    logging.info(f"Scheduler Type: {pprint.pformat(Config.lr_scheduler_type)}")
+    logging.info(f"Scheduler parameters: {pprint.pformat(Config.lr_scheduler_params)}")
     logging.info(f"Train/Validation split ratio: {pprint.pformat(Config.train_val_split)}")
     logging.info(f"Batch size: {pprint.pformat(Config.batch_size)}")
     
@@ -51,8 +53,8 @@ def main():
     
     with tf.device("/cpu:0"):
  
-        if (Config.dataloader_type.lower() == 'onlinedatasetloader'):
-            data_loader = OnlineDatasetLoader.OnlineDatasetLoader(Config)
+        #if (Config.dataloader_type.lower() == 'onlinedatasetloader'):
+        #    data_loader = OnlineDatasetLoader.OnlineDatasetLoader(Config)
         if (Config.dataloader_type.lower() == 'datasetfileloader'):
             data_loader = DatasetFileLoader.DatasetFileLoader(Config)
         else:
