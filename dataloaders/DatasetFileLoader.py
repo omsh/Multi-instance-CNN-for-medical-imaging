@@ -41,9 +41,9 @@ class DatasetFileLoader:
         n = train_images.shape[0]
         n_val = val_images.shape[0]
         
-        self.train_dataset = tf.data.Dataset.from_tensor_slices((train_images, train_labels)).shuffle(n)
+        self.train_dataset = tf.data.Dataset.from_tensor_slices((train_images, train_labels))
         
-        self.train_dataset = self.train_dataset.shuffle(n, reshuffle_each_iteration = True)
+        self.train_dataset = self.train_dataset.shuffle(n, reshuffle_each_iteration = True).repeat()
         
         self.train_dataset = self.train_dataset.map(self.read_images,
                                                  num_parallel_calls = self.config.num_parallel_cores)
@@ -51,12 +51,19 @@ class DatasetFileLoader:
         self.train_dataset = self.train_dataset.map(self.preprocess_train,
                                                     num_parallel_calls = self.config.num_parallel_cores)
 
-        self.train_dataset = self.train_dataset.batch(self.config.batch_size)
-        
-        if (self.config.train_on_patches):
-            self.train_dataset = self.train_dataset.map(self.get_patches,
-                                                        num_parallel_calls = self.config.num_parallel_cores)
-        
+        if (self.config.patch_generation_scheme == 'random_crops' and self.config.train_on_patches):
+            self.train_dataset = self.train_dataset.map(
+                self.get_random_crop, num_parallel_calls = self.config.num_parallel_cores)
+            
+            self.train_dataset = self.train_dataset.batch(
+                self.config.batch_size * self.config.n_random_patches)
+        else:    
+            self.train_dataset = self.train_dataset.batch(self.config.batch_size)
+
+            if (self.config.train_on_patches):
+                self.train_dataset = self.train_dataset.map(
+                        self.get_patches, num_parallel_calls = self.config.num_parallel_cores)
+
         self.train_dataset = self.train_dataset.map(self.color_augment,
                                                     num_parallel_calls = self.config.num_parallel_cores)
         
@@ -70,7 +77,7 @@ class DatasetFileLoader:
         
         # validation dataset
         
-        self.val_dataset = tf.data.Dataset.from_tensor_slices((val_images, val_labels))
+        self.val_dataset = tf.data.Dataset.from_tensor_slices((val_images, val_labels)).repeat()
         
         self.val_dataset = self.val_dataset.map(self.read_images,
                                                     num_parallel_calls = self.config.num_parallel_cores)
@@ -78,23 +85,28 @@ class DatasetFileLoader:
         self.val_dataset = self.val_dataset.map(self.preprocess_val,
                                                     num_parallel_calls = self.config.num_parallel_cores)
 
-        self.val_dataset = self.val_dataset.batch(self.config.batch_size)
+        if (self.config.patch_generation_scheme == 'random_crops' and self.config.train_on_patches):
+            self.val_dataset = self.val_dataset.map(
+                self.get_random_crop, num_parallel_calls = self.config.num_parallel_cores)
+            
+            self.val_dataset = self.val_dataset.batch(
+                self.config.batch_size * self.config.n_random_patches)
+        else:    
+            self.val_dataset = self.val_dataset.batch(self.config.batch_size)
 
-        if (self.config.train_on_patches):
-            self.val_dataset = self.val_dataset.map(self.get_patches,
-                                                    num_parallel_calls = self.config.num_parallel_cores)
-                
+            if (self.config.train_on_patches):
+                self.val_dataset = self.val_dataset.map(
+                        self.get_patches, num_parallel_calls = self.config.num_parallel_cores)                
         self.val_dataset = self.val_dataset.prefetch(self.config.batch_size)
                 
         self.val_init_op = self.iterator.make_initializer(self.val_dataset)
-        
                 
         self.len_x_train = train_labels.shape[0] 
-        self.len_x_val = val_labels.shape[0]
-
         self.num_iterations_train = self.len_x_train // self.config.batch_size
-        self.num_iterations_val = self.len_x_val // self.config.batch_size
         
+        self.len_x_val = val_labels.shape[0]
+        self.num_iterations_val = self.len_x_val // self.config.batch_size
+
         print("Iterations Train: ", self.num_iterations_train)
         print("Iterations Val: ", self.num_iterations_val)
         
@@ -135,7 +147,7 @@ class DatasetFileLoader:
         return image, tf.cast(label, tf.int64)
     
     def get_patches(self, images, labels):
-        images, n_patches = extract_patches_from_tensor(images, size=(self.config.patch_size, self.config.patch_size))
+        images, n_patches = extract_patches_from_tensor(images, size=(self.config.patch_size, self.config.patch_size), overlap = self.config.patches_overlap)
         
         logging.info(f"Shape of patches: {pprint.pformat(images.shape)}")
         logging.info(f"Shape of labels: {pprint.pformat(labels.shape)}")
@@ -143,18 +155,18 @@ class DatasetFileLoader:
                                                      
         # squeeze 1st and 2nd dimensions via reshape or sampling
                             
-        if (self.config.pick_random_patches):
+        if (self.config.patch_generation_scheme == 'sequential_randomly_subset'):
             start_patch_i = tf.random_uniform(shape = [1],
                                               minval = 0,
-                                              maxval = tf.shape(images)[1] - self.config.pick_n_random_patches,
+                                              maxval = tf.shape(images)[1] - self.config.n_random_patches,
                                               dtype = tf.int32,
                                               seed = self.config.random_seed)
 
-            end_patch_i = start_patch_i + self.config.pick_n_random_patches
+            end_patch_i = start_patch_i + self.config.n_random_patches
             
-            images, labels = tf.cond(tf.greater(tf.shape(images)[1], self.config.pick_n_random_patches),
+            images, labels = tf.cond(tf.greater(tf.shape(images)[1], self.config.n_random_patches),
                              lambda: (tf.map_fn(lambda x: x[start_patch_i[0] : end_patch_i[0], :, :], images),
-                                     tf.reshape(tf.map_fn(lambda x: tf.tile([x], [self.config.pick_n_random_patches]), labels), shape=(-1,))), 
+                                     tf.reshape(tf.map_fn(lambda x: tf.tile([x], [self.config.n_random_patches]), labels), shape=(-1,))), 
                              lambda: (images, labels))
         else:
             labels = tf.reshape(tf.map_fn(lambda x: tf.tile([x], [n_patches]), labels), shape=(-1,))
@@ -166,16 +178,21 @@ class DatasetFileLoader:
         images = tf.image.resize_images(images, [224, 224])
         
         return tf.cast(images, dtype = tf.float32), labels
+
+    
+    def get_random_crop(self, images, labels):
+        images = tf.random_crop(images, size = [self.config.patch_size, self.config.patch_size, 3])
+        return tf.cast(images, dtype = tf.float32), labels
     
     def color_augment(self, images, labels):
         if (self.config.random_brightness):
             images = tf.image.random_brightness(images, 0.5)
         if (self.config.random_contrast):
-            images = tf.image.random_contrast(images, 0.5, 1)
+            images = tf.image.random_contrast(images, 0.75, 1)
         if (self.config.random_saturation):
             images = tf.image.random_saturation(images, 0.75, 1)
         if (self.config.random_hue):
-            images = tf.image.random_hue(images, 0.1)
+            images = tf.image.random_hue(images, 0.05)
             
         return tf.cast(images, dtype = tf.float32), labels
         
