@@ -31,27 +31,26 @@ class Config:
     
 
     # training on a subset of the data, for testing and prototyping
-    train_on_subset = False
-    subset_size = 40
+    train_on_subset = True
+    subset_size = 12
 
     # patch geneartion
     train_on_patches = True
     patch_size = 448
     
-    patch_generation_scheme = 'sequential_full'
+    patch_generation_scheme = 'random_crops'
     available_patch_generation_schemes = {'sequential_full', 'sequential_randomly_subset', 'random_crops'}
-    overlap_patches = False     # valid only for 'sequential_full' and 'sequential_randomly_subset'
     
+    patches_overlap = 0.1 # valid only for types 1 and 2, 0.1 --> 10% overlap
     
-    pick_random_patches = False # remove this one and if on the type
-    pick_n_random_patches = 35  # use this one as a generic n_patches for types 2 and 3
+    n_random_patches = 12  # use this one as a generic n_patches for types 2 and 3
     random_seed = 1
 
     # Training parameters
-    train_val_split = 0.8
+    train_val_split = 0.75
     
     batch_size = 3
-    num_epochs = 150
+    num_epochs = 5
 
     # Optimizer parameters
     optimizer_type = 'Adam'
