@@ -9,7 +9,7 @@ import tensorflow as tf
 
 from dataloaders import DatasetLoader, DatasetFileLoader
 
-from models import LeNet, ResNet50, AlexNet, Inception
+from models import LeNet, ResNet50, AlexNet, Inception, ResNeXt
 
 from trainers.MTrainer import MTrainer
 
@@ -75,6 +75,8 @@ def main():
             model = AlexNet.AlexNet(data_loader, Config)
         elif (Config.model_type.lower() == 'inception'):
             model = Inception.Inception(data_loader, Config)
+        elif (Config.model_type.lower() == 'resnext'):
+            model = ResNeXt.ResNeXt(data_loader, Config)
         else:
             model = LeNet.LeNet(data_loader, Config)
 

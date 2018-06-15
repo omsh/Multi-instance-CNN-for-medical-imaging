@@ -77,7 +77,7 @@ class Config:
     # Model parameters
 
     model_type = 'ResNet50'
-    available_model_types = {'LeNet', 'ResNet50', 'AlexNet', 'Inception'}
+    available_model_types = {'LeNet', 'ResNet50', 'AlexNet', 'Inception', 'ResNeXt'}
 
     # Model saving parameters
     max_to_keep = 1
