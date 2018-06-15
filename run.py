@@ -8,11 +8,9 @@ sys.path.extend(['..'])
 import tensorflow as tf
 
 from dataloaders import DatasetLoader, DatasetFileLoader
-<<<<<<< HEAD
-from models import LeNet, ResNet50, AlexNet, Inception, ResNeXt
-=======
+
 from models import LeNet, ResNet50, AlexNet, Inception
->>>>>>> develop
+
 from trainers.MTrainer import MTrainer
 
 from utils.logger import DefinedSummarizer
@@ -55,15 +53,10 @@ def main():
     # create your data generator
 
     with tf.device("/cpu:0"):
-<<<<<<< HEAD
 
-        if (Config.dataloader_type.lower() == 'onlinedatasetloader'):
-            data_loader = OnlineDatasetLoader.OnlineDatasetLoader(Config)
-=======
- 
         #if (Config.dataloader_type.lower() == 'onlinedatasetloader'):
         #    data_loader = OnlineDatasetLoader.OnlineDatasetLoader(Config)
->>>>>>> develop
+
         if (Config.dataloader_type.lower() == 'datasetfileloader'):
             data_loader = DatasetFileLoader.DatasetFileLoader(Config)
         else:

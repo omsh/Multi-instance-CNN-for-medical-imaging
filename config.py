@@ -75,16 +75,9 @@ class Config:
     }
        
     # Model parameters
-<<<<<<< HEAD
-    model_type = 'ResNeXt'
-    available_model_types = {'LeNet', 'ResNet50', 'AlexNet', 'Inception', 'ResNeXt'}
-    
-    batch_size = 1
-    num_epochs = 20
-=======
+
     model_type = 'ResNet50'
     available_model_types = {'LeNet', 'ResNet50', 'AlexNet', 'Inception'}
->>>>>>> develop
 
     # Model saving parameters
     max_to_keep = 1
