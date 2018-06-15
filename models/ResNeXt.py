@@ -58,6 +58,9 @@ class ResNeXt(BaseModel):
         self.acc = None
         self.train_step = None
         self.num_classes = config.num_classes
+
+        # ResNeXt specific hyperparameters
+        # Can be added through config file
         self.cardinality = 8  # how many split ?
         self.blocks = 3  # res_block ! (split + transition)
         self.depth = 64 # out channel
