@@ -72,8 +72,9 @@ class MTrainer(BaseTrainer):
             acc_per_epoch.update(acc)
 
         self.sess.run(self.model.global_epoch_inc)
-        logging.info(f"Epoch: {pprint.pformat(epoch)}")
-        logging.info(f"Loss Per Epoch: {pprint.pformat(loss_per_epoch.val)}")
+        logging.info(f"Learning rate: {pprint.pformat(self.sess.run(self.model.optimizer._lr))}")
+        logging.info(f"Training Epoch: {pprint.pformat(epoch)}")
+        logging.info(f"Training Loss Per Epoch: {pprint.pformat(loss_per_epoch.val)}")
         logging.info(f"Accuracy Per Epoch: {pprint.pformat(acc_per_epoch.val)}")
 
         # summarize
@@ -123,9 +124,9 @@ Epoch-{}  loss:{:.4f} -- acc:{:.4f}
             acc_per_epoch.update(acc)
 
         
-        logging.info(f"Validation Epoch: {pprint.pformat(epoch)}")
-        logging.info(f"Loss Per Epoch: {pprint.pformat(loss_per_epoch.val)}")
-        logging.info(f"Accuracy Per Epoch: {pprint.pformat(acc_per_epoch.val)}")
+        logging.info(f"Val Epoch: {pprint.pformat(epoch)}")
+        logging.info(f"Val Loss Per Epoch: {pprint.pformat(loss_per_epoch.val)}")
+        logging.info(f"Val Accuracy Per Epoch: {pprint.pformat(acc_per_epoch.val)}")
         
         # summarize
         summaries_dict = {'test/loss_per_epoch': loss_per_epoch.val,
