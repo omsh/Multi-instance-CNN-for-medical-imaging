@@ -32,6 +32,7 @@ class Config:
 
     # training on a subset of the data, for testing and prototyping
     train_on_subset = True
+
     subset_size = 12
 
     # patch geneartion
@@ -40,11 +41,13 @@ class Config:
     
     patch_generation_scheme = 'random_crops'
     available_patch_generation_schemes = {'sequential_full', 'sequential_randomly_subset', 'random_crops'}
+
     
     patches_overlap = 0.1 # valid only for types 1 and 2, 0.1 --> 10% overlap
     
     n_random_patches = 12  # use this one as a generic n_patches for types 2 and 3
     random_seed = 1
+
 
     # Training parameters
     train_val_split = 0.75
@@ -72,6 +75,7 @@ class Config:
     }
        
     # Model parameters
+
     model_type = 'ResNet50'
     available_model_types = {'LeNet', 'ResNet50', 'AlexNet', 'Inception'}
 
