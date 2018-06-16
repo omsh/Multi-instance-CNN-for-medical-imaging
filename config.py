@@ -1,8 +1,8 @@
 class Config:
 
     # directories
-    summary_dir = "summary/ResNet50_test_pat_448_lrs_colaug"
-    checkpoint_dir = "checkpoints/ResNet50_test_pat_448_lrs_colaug"
+    summary_dir = "summary/model_name_here"
+    checkpoint_dir = "checkpoints/model_name_here"
 
     # hardware parameters
     num_parallel_cores = 8
@@ -31,29 +31,28 @@ class Config:
     
 
     # training on a subset of the data, for testing and prototyping
-    train_on_subset = True
-
+    train_on_subset = False
     subset_size = 12
 
     # patch geneartion
     train_on_patches = True
-    patch_size = 448
+    patch_size = 224
     
-    patch_generation_scheme = 'random_crops'
+    patch_generation_scheme = 'sequential_full'
     available_patch_generation_schemes = {'sequential_full', 'sequential_randomly_subset', 'random_crops'}
 
     
-    patches_overlap = 0.1 # valid only for types 1 and 2, 0.1 --> 10% overlap
+    patches_overlap = 0 # valid only for types 1 and 2, 0.1 --> 10% overlap
     
     n_random_patches = 12  # use this one as a generic n_patches for types 2 and 3
     random_seed = 1
 
 
     # Training parameters
-    train_val_split = 0.75
+    train_val_split = 0.8
     
-    batch_size = 3
-    num_epochs = 5
+    batch_size = 4
+    num_epochs = 150
 
     # Optimizer parameters
     optimizer_type = 'Adam'
@@ -76,7 +75,7 @@ class Config:
        
     # Model parameters
 
-    model_type = 'ResNet50'
+    model_type = 'AlexNet'
     available_model_types = {'LeNet', 'ResNet50', 'AlexNet', 'Inception', 'ResNeXt'}
 
     # Model saving parameters
