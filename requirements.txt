@@ -4,3 +4,5 @@ pandas
 tensorflow
 tqdm
 scikit-learn
+tflearn
+
