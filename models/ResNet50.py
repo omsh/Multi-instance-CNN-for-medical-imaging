@@ -77,10 +77,9 @@ class ResNet50(BaseModel):
             #one_hot_y = tf.one_hot(indices=self.y, depth=self.num_classes)
             
             self.loss = tf.losses.sparse_softmax_cross_entropy(labels = self.y, logits = self.logits)
-            
-            
+
             #probabilities = end_points['Predictions']
-            
+
             #accuracy, accuracy_update = tf.metrics.accuracy(labels = one_hot_y, predictions = self.out_argmax)
             self.acc = tf.reduce_mean(tf.cast(tf.equal(self.y, self.out_argmax), tf.float32))
 
