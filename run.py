@@ -9,7 +9,7 @@ import tensorflow as tf
 
 from dataloaders import DatasetLoader, DatasetFileLoader
 
-from models import LeNet, ResNet50, AlexNet, Inception, ResNeXt
+from models import LeNet, ResNet18, ResNet50, AlexNet, Inception, ResNeXt
 
 from trainers.MTrainer import MTrainer
 
@@ -68,6 +68,8 @@ def main():
             # create instance of the model you want
             if (Config.model_type.lower() == 'lenet'):
                 model = LeNet.LeNet(data_loader, Config)
+            elif (Config.model_type.lower() == 'resnet18'):
+                model = ResNet18.ResNet18(data_loader, Config)
             elif (Config.model_type.lower() == 'resnet50'):
                 model = ResNet50.ResNet50(data_loader, Config)
             elif (Config.model_type.lower() == 'alexnet'):
