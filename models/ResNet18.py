@@ -1,14 +1,18 @@
+# Adapted from: https://github.com/dalgu90/resnet-18-tensorflow
+
 import tensorflow as tf
 import numpy as np
+from models.BaseModel import BaseModel
+import utils.resnet18_utils as utils
+import logging
+import pprint
 
-import utils
-
-# ADD UTILS
+# TODO:
 # CLEAN PARAMETERS AND FUNCTIONS
 # INCLUDE PRETRAINED WEIGHTS
 # CHECK NECESSITY OF FLOP-UPDATE
 
-class ResNet18(object):
+class ResNet18(BaseModel):
     def __init__(self, data_loader, config):
         super(ResNet18, self).__init__(config)
 
@@ -22,6 +26,9 @@ class ResNet18(object):
         self.acc = None
         self.train_step = None
         self.num_classes = config.num_classes
+        self._counted_scope = []
+        self._flops = 0
+        self._weights = 0
 
         self.build_model()
         self.init_saver()
@@ -60,7 +67,7 @@ class ResNet18(object):
         with tf.variable_scope('logits') as scope:
             print('\tBuilding unit: %s' % scope.name)
             x = tf.reduce_mean(x, [1, 2])
-            x = self._fc(x, self._hp.num_classes)
+            x = self._fc(x, self.num_classes)
 
         logits = x
 
@@ -95,7 +102,7 @@ class ResNet18(object):
         """
         with tf.variable_scope('network'):
             self.logits, end_points = self.build_tower()
-            self.logits = tf.squeeze(self.logits, axis=[1, 2])
+            #self.logits = tf.squeeze(self.logits, axis=[1, 2])
 
             with tf.variable_scope('out'):
                 # self.out = tf.squeeze(end_points['predictions'], axis=[1,2])
@@ -235,7 +242,7 @@ class ResNet18(object):
         return x
 
     def _bn(self, x, name="bn"):
-        x = utils._bn(x, self.is_train, self._global_step, name)
+        x = utils._bn(x, self.is_training, name=name)
         return x
 
     def _relu(self, x, name="relu"):
