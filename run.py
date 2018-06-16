@@ -50,46 +50,45 @@ def main():
     logging.info(f"Generating Patches: {pprint.pformat(Config.train_on_patches)}")
     logging.info(f"Patch size (square): {pprint.pformat(Config.patch_size)}")
 
-    # create your data generator
+    # create your data generator on the CPU 
 
     with tf.device("/cpu:0"):
-
-        #if (Config.dataloader_type.lower() == 'onlinedatasetloader'):
-        #    data_loader = OnlineDatasetLoader.OnlineDatasetLoader(Config)
 
         if (Config.dataloader_type.lower() == 'datasetfileloader'):
             data_loader = DatasetFileLoader.DatasetFileLoader(Config)
         else:
             data_loader = DatasetLoader.DatasetLoader(Config)
 
-    # create tensorflow session
+    # create tensorflow session on the GPU defined in Config file
 
-    with tf.Session() as sess:
+    with tf.device(Config.gpu_address):
+    
+        with tf.Session(config=tf.ConfigProto(allow_soft_placement=True)) as sess:
 
-        # create instance of the model you want
-        if (Config.model_type.lower() == 'lenet'):
-            model = LeNet.LeNet(data_loader, Config)
-        elif (Config.model_type.lower() == 'resnet50'):
-            model = ResNet50.ResNet50(data_loader, Config)
-        elif (Config.model_type.lower() == 'alexnet'):
-            model = AlexNet.AlexNet(data_loader, Config)
-        elif (Config.model_type.lower() == 'inception'):
-            model = Inception.Inception(data_loader, Config)
-        elif (Config.model_type.lower() == 'resnext'):
-            model = ResNeXt.ResNeXt(data_loader, Config)
-        else:
-            model = LeNet.LeNet(data_loader, Config)
+            # create instance of the model you want
+            if (Config.model_type.lower() == 'lenet'):
+                model = LeNet.LeNet(data_loader, Config)
+            elif (Config.model_type.lower() == 'resnet50'):
+                model = ResNet50.ResNet50(data_loader, Config)
+            elif (Config.model_type.lower() == 'alexnet'):
+                model = AlexNet.AlexNet(data_loader, Config)
+            elif (Config.model_type.lower() == 'inception'):
+                model = Inception.Inception(data_loader, Config)
+            elif (Config.model_type.lower() == 'resnext'):
+                model = ResNeXt.ResNeXt(data_loader, Config)
+            else:
+                model = LeNet.LeNet(data_loader, Config)
 
-        # create tensorboard logger
-        logger = DefinedSummarizer(sess, summary_dir=Config.summary_dir,
-                                   scalar_tags=['train/loss_per_epoch', 'train/acc_per_epoch',
-                                                'test/loss_per_epoch', 'test/acc_per_epoch'])
+            # create tensorboard logger
+            logger = DefinedSummarizer(sess, summary_dir=Config.summary_dir,
+                                       scalar_tags=['train/loss_per_epoch', 'train/acc_per_epoch',
+                                                    'test/loss_per_epoch', 'test/acc_per_epoch'])
 
-        # create trainer and path all previous components to it
-        trainer = MTrainer(sess, model, Config, logger, data_loader)
+            # create trainer and path all previous components to it
+            trainer = MTrainer(sess, model, Config, logger, data_loader)
 
-        # here you train your model
-        trainer.train()
+            # here you train your model
+            trainer.train()
 
 
 if __name__ == '__main__':
