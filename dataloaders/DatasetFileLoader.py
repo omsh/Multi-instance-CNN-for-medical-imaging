@@ -1,10 +1,7 @@
 import tensorflow as tf
 import numpy as np
 from PIL import Image
-
-
 from utils.img_utils import get_images_pathlist_labels, extract_patches_from_tensor, split_train_val
-
 import logging
 import pprint
 import random
@@ -62,7 +59,7 @@ class DatasetFileLoader:
 
             if (self.config.train_on_patches):
                 self.train_dataset = self.train_dataset.map(
-                        self.get_patches, num_parallel_calls = self.config.num_parallel_cores)
+                        self.get_patches_train, num_parallel_calls = self.config.num_parallel_cores)
 
         self.train_dataset = self.train_dataset.map(self.color_augment,
                                                     num_parallel_calls = self.config.num_parallel_cores)
@@ -96,7 +93,7 @@ class DatasetFileLoader:
 
             if (self.config.train_on_patches):
                 self.val_dataset = self.val_dataset.map(
-                        self.get_patches, num_parallel_calls = self.config.num_parallel_cores)                
+                        self.get_patches_val, num_parallel_calls = self.config.num_parallel_cores)                
         self.val_dataset = self.val_dataset.prefetch(self.config.batch_size)
                 
         self.val_init_op = self.iterator.make_initializer(self.val_dataset)
@@ -146,38 +143,41 @@ class DatasetFileLoader:
         
         return image, tf.cast(label, tf.int64), bag_index
     
-    def get_patches(self, images, labels, bag_index):
+    def get_patches_train(self, images, labels, bag_index):
         images, n_patches = extract_patches_from_tensor(images, size=(self.config.patch_size, self.config.patch_size), overlap = self.config.patches_overlap)
         
-        logging.info(f"Shape of patches: {pprint.pformat(images.shape)}")
-        logging.info(f"Shape of labels: {pprint.pformat(labels.shape)}")
-        logging.info(f"Number of patches extracted: {pprint.pformat(n_patches)}")        
-                                                     
+        # just getting a cleaner code below
+        nrp = self.config.n_random_patches
+        
         # squeeze 1st and 2nd dimensions via reshape or sampling
                             
         if (self.config.patch_generation_scheme == 'sequential_randomly_subset'):
-            start_patch_i = tf.random_uniform(shape = [1],
-                                              minval = 0,
-                                              maxval = tf.shape(images)[1] - self.config.n_random_patches,
-                                              dtype = tf.int32,
-                                              seed = self.config.random_seed)
-
-            end_patch_i = start_patch_i + self.config.n_random_patches
+            i = tf.random_uniform(shape = [1], minval = 0, maxval = tf.shape(images)[1] - nrp,
+                                  dtype = tf.int32, seed = self.config.random_seed)
+            j = i + nrp
             
-            images, labels = tf.cond(tf.greater(tf.shape(images)[1], self.config.n_random_patches),
-                             lambda: (tf.map_fn(lambda x: x[start_patch_i[0] : end_patch_i[0], :, :], images),
-                                     tf.reshape(tf.map_fn(lambda x: tf.tile([x], [self.config.n_random_patches]), labels), shape=(-1,))), 
-                             lambda: (images, labels))
+            images, labels = tf.cond(
+                tf.greater(tf.shape(images)[1], nrp),
+                lambda: (tf.map_fn(lambda x: x[i[0] : j[0], :, :], images),
+                         tf.reshape(tf.map_fn(lambda x: tf.tile([x], [nrp]), labels), shape=(-1,))),
+                lambda: (images, labels))
         else:
             labels = tf.reshape(tf.map_fn(lambda x: tf.tile([x], [n_patches]), labels), shape=(-1,))
-            
-        logging.info(f"Shape of labels after patching (repeat): {pprint.pformat(labels.shape)}")
-                    
+                                
         images = tf.reshape(images, shape=(-1, self.config.patch_size, self.config.patch_size, 3))
         
         images = tf.image.resize_images(images, [224, 224])
         
- 
+        return tf.cast(images, dtype = tf.float32), labels, bag_index
+    
+    def get_patches_val(self, images, labels, bag_index):
+        images, n_patches = extract_patches_from_tensor(images, size=(self.config.patch_size, self.config.patch_size), overlap = self.config.patches_overlap)
+                                                             
+        # squeeze 1st and 2nd dimensions via reshape (validation) and repeat labels
+        
+        labels = tf.reshape(tf.map_fn(lambda x: tf.tile([x], [n_patches]), labels), shape=(-1,))       
+        images = tf.reshape(images, shape=(-1, self.config.patch_size, self.config.patch_size, 3))
+        images = tf.image.resize_images(images, [224, 224])
         
         return tf.cast(images, dtype = tf.float32), labels, bag_index
 
