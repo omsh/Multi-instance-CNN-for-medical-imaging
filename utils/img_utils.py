@@ -30,13 +30,13 @@ def get_images_pathlist_labels(dir_names=["data/0_Benign_PNGs", "data/1_Cnormal_
     labels = le.fit_transform(labels)
     
     files_list, labels = np.asarray(files_list), np.asarray(labels)
+    bag_index = np.asarray(list(range(len(labels))))
 
     if (pre_shuffle):
         files_list, labels = shuffle(files_list, labels, random_state = seed)
 
-    return files_list, labels
+    return files_list, labels, bag_index
         
-
 
 # Function to read the converted png images and labels from disk and return numpy arrays
 
@@ -61,34 +61,37 @@ def read_images_labels(dir_names=["data/0_Benign_PNGs", "data/1_Cnormal_PNGs", "
         labels.append(label)
 
     images, labels = np.asarray(images), np.asarray(labels)
-
+    bag_index = np.asarray(list(range(len(labels))))
+    
     if (pre_shuffle):
         images, labels = shuffle(images, labels, random_state = seed)
 
-    return images, labels 
+    return images, labels, bag_index
 
 # -------------------------------------------------------------------------------------
 
 # Function to split numpy arrays of images and labels with split a ratio
 # returns 4 arrays images, labels for train and val
 
-def split_train_val(images, labels, ratio = 0.8, pre_shuffle = True, seed = 1, per_class_split = False):
+def split_train_val(images, labels, bag_index, ratio = 0.8, pre_shuffle = True, seed = 1, per_class_split = False):
         if (pre_shuffle):
-            images, labels = shuffle(images, labels, random_state = seed)
+            images, labels, bag_index = shuffle(images, labels, bag_index, random_state = seed)
             
         if (per_class_split):
             sss = StratifiedShuffleSplit(n_splits=1, test_size=(1-ratio), random_state = seed)
             for train_index, val_index in sss.split(images, labels):
                 X_train, X_val = images[train_index], images[val_index]
                 y_train, y_val = labels[train_index], labels[val_index]
+                bi_train, bi_val = bag_index[train_index], bag_index[val_index]
             
         else:
             n = labels.shape[0]
             s = int(n * ratio)
             X_train, X_val =  images[:s], images[s:]
             y_train, y_val =  labels[:s], labels[s:]
+            bi_train, bi_val = bag_index[:s], bag_index[s:]
             
-        return X_train, y_train, X_val, y_val
+        return X_train, y_train, bi_train, X_val, y_val, bi_val
     
 # -------------------------------------------------------------------------------------
 
