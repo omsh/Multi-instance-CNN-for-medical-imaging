@@ -1,4 +1,5 @@
 import tensorflow as tf
+from utils.model_utils import acc_majority_class
 
 
 class BaseModel:
@@ -81,7 +82,10 @@ class BaseModel:
             self.optimizer = tf.train.GradientDescentOptimizer(**self.config.optim_params)
             
                 
-            
+    def evaluate_accuracy(self, y, preds, is_training, n_patches):
+        return tf.cond(is_training,
+                       lambda: tf.reduce_mean(tf.cast(tf.equal(y, preds), tf.float32)),
+                       lambda: acc_majority_class(y, preds, n_patches))
 
     def init_saver(self):
         # just copy the following line in your child class
