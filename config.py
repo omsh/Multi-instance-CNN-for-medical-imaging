@@ -1,8 +1,8 @@
 class Config:
 
     # directories
-    summary_dir = "summary/model_name_here"
-    checkpoint_dir = "checkpoints/model_name_here"
+    summary_dir = "summary/new_random_testing"
+    checkpoint_dir = "checkpoints/subset_test_seq_224_1e4"
 
     # hardware parameters
     num_parallel_cores = 8
@@ -16,43 +16,48 @@ class Config:
     # Dataset parameters
     num_classes = 4
     dataset_size = 400
+    image_h = 1536
+    image_w = 2048
 
     # Augmentation
 
     #  This is pre-augmentation random rotations for images (applied before patching)
     #  angles in degrees and rotation is counter-clock-wise
-    rotation_angles = [0, 90, 180, 270]
+    rotation_angles = [0]
     
     # Color Augmentation
-    random_contrast = True
-    random_hue = True
-    random_brightness = True
-    random_saturation = True
+    random_contrast = False
+    random_hue = False
+    random_brightness = False
+    random_saturation = False
     
 
     # training on a subset of the data, for testing and prototyping
     train_on_subset = False
-    subset_size = 12
+    subset_size = 40
 
     # patch geneartion
     train_on_patches = True
     patch_size = 224
     
-    patch_generation_scheme = 'sequential_full'
+    # to be computed afterwards, needed for  validation and diff patching options
+    patch_count = 70
+    
+    patch_generation_scheme = 'random_crops'
     available_patch_generation_schemes = {'sequential_full', 'sequential_randomly_subset', 'random_crops'}
 
     
     patches_overlap = 0 # valid only for types 1 and 2, 0.1 --> 10% overlap
     
-    n_random_patches = 12  # use this one as a generic n_patches for types 2 and 3
+    n_random_patches = 20  # use this one as a generic n_patches for types 2 and 3
     random_seed = 1
 
 
     # Training parameters
-    train_val_split = 0.8
+    train_val_split = 0.75
     
-    batch_size = 4
-    num_epochs = 150
+    batch_size = 5
+    num_epochs = 10
 
     # Optimizer parameters
     optimizer_type = 'Adam'
@@ -68,14 +73,14 @@ class Config:
     
     lr_scheduler_params = {
         'learning_rate': optim_params['learning_rate'],   # this is the starting learning rate
-        'decay_steps': 7 * (dataset_size * train_val_split // batch_size),   # number of steps to wait for before decaying the learning rate
+        'decay_steps': 5 * (dataset_size * train_val_split // batch_size),   # number of steps to wait for before decaying the learning rate
         'decay_rate': 0.9,       # the rate by which the learing rate is decayed
         'staircase': True    # whether to decay discretely or continuously
     }
        
     # Model parameters
 
-    model_type = 'AlexNet'
+    model_type = 'ResNet50'
     available_model_types = {'LeNet', 'ResNet18', 'ResNet50', 'AlexNet', 'Inception', 'ResNeXt'}
 
     # Model saving parameters
