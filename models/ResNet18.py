@@ -20,6 +20,7 @@ class ResNet18(BaseModel):
 
         self.x = None
         self.y = None
+        self.bi = None
         self.is_training = None
         self.out_argmax = None
         self.loss = None
@@ -95,6 +96,7 @@ class ResNet18(BaseModel):
             self.is_training = tf.placeholder(tf.bool, name='Training_flag')
         tf.add_to_collection('inputs', self.x)
         tf.add_to_collection('inputs', self.y)
+        tf.add_to_collection('inputs', self.bi)
         tf.add_to_collection('inputs', self.is_training)
 
         """
