@@ -122,7 +122,9 @@ class ResNet18(BaseModel):
 
         with tf.variable_scope('loss-acc'):
             self.loss = tf.losses.sparse_softmax_cross_entropy(labels=self.y, logits=self.logits)
-            self.acc = tf.reduce_mean(tf.cast(tf.equal(self.y, self.out_argmax), tf.float32))
+            #self.acc = tf.reduce_mean(tf.cast(tf.equal(self.y, self.out_argmax), tf.float32))
+            self.acc = self.evaluate_accuracy(self.y, self.out_argmax,
+                                              self.is_training, self.config.patch_count)
 
         with tf.variable_scope('train_step'):
             update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)

@@ -133,7 +133,9 @@ class ResNeXt(BaseModel):
             # probabilities = end_points['Predictions']
 
             # accuracy, accuracy_update = tf.metrics.accuracy(labels = one_hot_y, predictions = self.out_argmax)
-            self.acc = tf.reduce_mean(tf.cast(tf.equal(self.y, self.out_argmax), tf.float32))
+            #self.acc = tf.reduce_mean(tf.cast(tf.equal(self.y, self.out_argmax), tf.float32))
+            self.acc = self.evaluate_accuracy(self.y, self.out_argmax,
+                                              self.is_training, self.config.patch_count)
 
         with tf.variable_scope('train_step'):
             update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
