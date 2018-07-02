@@ -1,8 +1,8 @@
 class Config:
 
     # directories
-    summary_dir = "summary/new_random_testing"
-    checkpoint_dir = "checkpoints/subset_test_seq_224_1e4"
+    summary_dir = "summary/new_test_random_crops_"
+    checkpoint_dir = "checkpoints/new_test_random_crops_"
 
     # hardware parameters
     num_parallel_cores = 8
@@ -18,6 +18,7 @@ class Config:
     dataset_size = 400
     image_h = 1536
     image_w = 2048
+    channels = 3
 
     # Augmentation
 
@@ -56,8 +57,9 @@ class Config:
     # Training parameters
     train_val_split = 0.75
     
-    batch_size = 5
-    num_epochs = 10
+    batch_size = 2
+    
+    num_epochs = 50
 
     # Optimizer parameters
     optimizer_type = 'Adam'

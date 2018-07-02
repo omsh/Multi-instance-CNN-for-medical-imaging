@@ -140,17 +140,19 @@ class DatasetFileLoader:
     def get_patches_train(self, images, labels, bag_index):
         # just getting a cleaner code below
         n_patches = self.config.n_random_patches
+        p = self.config.patch_size
+        c = self.config.channels
         
         if (self.config.patch_generation_scheme == 'random_crops'):
-            n_images = tf.multiply(n_patches, tf.shape(images)[0])
-
-            images = tf.random_crop(tf.reshape(
-                tf.map_fn(lambda z: tf.tile([z], [n_patches, 1, 1, 1]), images),
-                shape=(-1, self.config.image_h, self.config.image_w, 3)), 
-                                    size = [n_images, self.config.patch_size, self.config.patch_size, 3])
+            images = tf.reshape(
+                tf.map_fn(
+                    lambda z: tf.stack([tf.random_crop(
+                        z, size = [p, p, c]) for _ in range(n_patches)]),
+                    images),
+                shape=[-1, p, p, c])
         else:
             images, n_patches = extract_patches_from_tensor(
-                images, size=(self.config.patch_size, self.config.patch_size),
+                images, size=(p, p),
                 overlap = self.config.patches_overlap)
         
         # squeeze 1st and 2nd dimensions via reshape or sampling
@@ -168,19 +170,24 @@ class DatasetFileLoader:
         else:
             labels = tf.reshape(tf.map_fn(lambda x: tf.tile([x], [n_patches]), labels), shape=(-1,))
                                 
-        images = tf.reshape(images, shape=(-1, self.config.patch_size, self.config.patch_size, 3))
+        images = tf.reshape(images, shape=(-1, p, p, c))
         
         images = tf.image.resize_images(images, [224, 224])
         
         return tf.cast(images, dtype = tf.float32), labels, bag_index
     
     def get_patches_val(self, images, labels, bag_index):
-        images, n_patches = extract_patches_from_tensor(images, size=(self.config.patch_size, self.config.patch_size), overlap = self.config.patches_overlap)
+        p = self.config.patch_size
+        c = self.config.channels
+        
+        images, n_patches = extract_patches_from_tensor(images, size=(p, p),
+                                                        overlap = self.config.patches_overlap)
                                                              
         # squeeze 1st and 2nd dimensions via reshape (validation) and repeat labels
         
+        
         labels = tf.reshape(tf.map_fn(lambda x: tf.tile([x], [n_patches]), labels), shape=(-1,))       
-        images = tf.reshape(images, shape=(-1, self.config.patch_size, self.config.patch_size, 3))
+        images = tf.reshape(images, shape=(-1, p, p, c))
         images = tf.image.resize_images(images, [224, 224])
         
         return tf.cast(images, dtype = tf.float32), labels, bag_index
