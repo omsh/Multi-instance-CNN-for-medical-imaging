@@ -5,6 +5,7 @@ from utils.img_utils import get_images_pathlist_labels, extract_patches_from_ten
 import logging
 import pprint
 import random
+from math import pi
 
 class DatasetFileLoader:
     """
@@ -34,6 +35,12 @@ class DatasetFileLoader:
         logging.info(f"Number of Training Images and Labels: {pprint.pformat(train_labels.shape[0])}")
         logging.info(f"Number of    Val   Images and Labels: {pprint.pformat(val_labels.shape[0])}")
         
+        
+        # precompute patch count (important for validation and testing)
+        self.config.patch_count = self.get_patch_count(train_images[0])
+        
+        logging.info(f"Precomputed number of patches per image: {pprint.pformat(self.config.patch_count)}")
+        
         # training dataset
         n = train_images.shape[0]
         n_val = val_images.shape[0]
@@ -55,10 +62,10 @@ class DatasetFileLoader:
             self.train_dataset = self.train_dataset.map(
                 self.get_patches_train, num_parallel_calls = self.config.num_parallel_cores)
 
-        self.train_dataset = self.train_dataset.map(self.color_augment,
+        self.train_dataset = self.train_dataset.map(self.patch_augment,
                                                     num_parallel_calls = self.config.num_parallel_cores)
         
-        self.train_dataset = self.train_dataset.prefetch(3)
+        self.train_dataset = self.train_dataset.prefetch(10)
 
         self.iterator = tf.data.Iterator.from_structure(self.train_dataset.output_types,
                                                            self.train_dataset.output_shapes)
@@ -76,19 +83,12 @@ class DatasetFileLoader:
         self.val_dataset = self.val_dataset.map(self.preprocess_val,
                                                     num_parallel_calls = self.config.num_parallel_cores)
 
-        #if (self.config.patch_generation_scheme == 'random_crops' and self.config.train_on_patches):
-        #    self.val_dataset = self.val_dataset.map(
-        #        self.get_random_crop, num_parallel_calls = self.config.num_parallel_cores)
-            
-        #    self.val_dataset = self.val_dataset.batch(
-        #        self.config.batch_size * self.config.n_random_patches)
-        #else:    
         self.val_dataset = self.val_dataset.batch(1)
 
         if (self.config.train_on_patches):
             self.val_dataset = self.val_dataset.map(
                 self.get_patches_val, num_parallel_calls = self.config.num_parallel_cores)                
-        self.val_dataset = self.val_dataset.prefetch(3)
+        self.val_dataset = self.val_dataset.prefetch(1)
                 
         self.val_init_op = self.iterator.make_initializer(self.val_dataset)
                 
@@ -191,13 +191,11 @@ class DatasetFileLoader:
         images = tf.image.resize_images(images, [224, 224])
         
         return tf.cast(images, dtype = tf.float32), labels, bag_index
-
     
-    def get_random_crop(self, images, labels, bag_index):
-        images = tf.random_crop(images, size = [self.config.patch_size, self.config.patch_size, 3])
-        return tf.cast(images, dtype = tf.float32), labels, bag_index
     
-    def color_augment(self, images, labels, bag_index):
+    def patch_augment(self, images, labels, bag_index):
+        
+        # color augmentation for patches
         if (self.config.random_brightness):
             images = tf.image.random_brightness(images, 0.5)
         if (self.config.random_contrast):
@@ -207,8 +205,28 @@ class DatasetFileLoader:
         if (self.config.random_hue):
             images = tf.image.random_hue(images, 0.05)
             
+        # rotation augmentation for patches
+        if (self.config.random_rotation_patches):
+            to_radian = lambda x: x * pi / 180
+            degree_angles = tf.random_uniform(shape = [tf.shape(images)[0]],
+                                              minval = 0, maxval = 360, seed = self.config.random_seed)
+            images = tf.contrib.image.rotate(
+                images, to_radian(degree_angles), interpolation = self.config.interpolation)
+            
         return tf.cast(images, dtype = tf.float32), labels, bag_index
         
+    
+    def get_patch_count(self, image_path):
+        image_path = np.asarray(image_path)
+        with tf.Session() as s:
+            image = tf.image.decode_png(tf.read_file(image_path), channels = 3)
+            _, count = extract_patches_from_tensor(tf.expand_dims(image, axis=0),
+                                                   (self.config.patch_size, self.config.patch_size),
+                                                   self.config.patches_overlap)
+            patch_count = count.eval(feed_dict={})
+        print("-------------------------------------------------", patch_count)
+        return patch_count
+            
     
     def initialize(self, sess, train = True):
         if (train):

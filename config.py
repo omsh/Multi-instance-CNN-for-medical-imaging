@@ -1,8 +1,8 @@
 class Config:
 
     # directories
-    summary_dir = "summary/new_test_random_crops_"
-    checkpoint_dir = "checkpoints/new_test_random_crops_"
+    summary_dir = "summary/new_test_random_crops_rotation_2e4"
+    checkpoint_dir = "checkpoints/new_test_random_crops_rotation_2e4"
 
     # hardware parameters
     num_parallel_cores = 8
@@ -24,7 +24,13 @@ class Config:
 
     #  This is pre-augmentation random rotations for images (applied before patching)
     #  angles in degrees and rotation is counter-clock-wise
+    
     rotation_angles = [0]
+    
+    # Rotation for patches: If True, random roations are done on patches
+    random_rotation_patches = True
+    interpolation = 'NEAREST' 
+    available_interpolation = {'NEAREST', 'BILINEAR'} 
     
     # Color Augmentation
     random_contrast = False
@@ -42,7 +48,7 @@ class Config:
     patch_size = 224
     
     # to be computed afterwards, needed for  validation and diff patching options
-    patch_count = 70
+    patch_count = -1
     
     patch_generation_scheme = 'random_crops'
     available_patch_generation_schemes = {'sequential_full', 'sequential_randomly_subset', 'random_crops'}
@@ -50,7 +56,7 @@ class Config:
     
     patches_overlap = 0 # valid only for types 1 and 2, 0.1 --> 10% overlap
     
-    n_random_patches = 20  # use this one as a generic n_patches for types 2 and 3
+    n_random_patches = 30  # use this one as a generic n_patches for types 2 and 3
     random_seed = 1
 
 
@@ -59,14 +65,14 @@ class Config:
     
     batch_size = 2
     
-    num_epochs = 50
+    num_epochs = 100
 
     # Optimizer parameters
     optimizer_type = 'Adam'
     available_optimizers = {'Adam', 'GradientDescentOptimizer', 'MomentumOptimizer'}
     
     optim_params = {
-        'learning_rate': 1e-4
+        'learning_rate': 2e-4
     }
     
     # learning rate scheduler (decay) type and parameters
@@ -75,7 +81,7 @@ class Config:
     
     lr_scheduler_params = {
         'learning_rate': optim_params['learning_rate'],   # this is the starting learning rate
-        'decay_steps': 5 * (dataset_size * train_val_split // batch_size),   # number of steps to wait for before decaying the learning rate
+        'decay_steps': 7 * (dataset_size * train_val_split // batch_size),   # number of steps to wait for before decaying the learning rate
         'decay_rate': 0.9,       # the rate by which the learing rate is decayed
         'staircase': True    # whether to decay discretely or continuously
     }
