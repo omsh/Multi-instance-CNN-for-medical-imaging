@@ -45,7 +45,7 @@ class DatasetFileLoader:
         n = train_images.shape[0]
         n_val = val_images.shape[0]
         
-        self.train_dataset = tf.data.Dataset.from_tensor_slices((train_images, train_labels, train_bi))
+        self.train_dataset = tf.data.Dataset.from_tensor_slices((train_images, train_labels, train_labels, train_bi))
         
         self.train_dataset = self.train_dataset.shuffle(n, reshuffle_each_iteration = True).repeat()
         
@@ -75,7 +75,7 @@ class DatasetFileLoader:
         
         # validation dataset
         
-        self.val_dataset = tf.data.Dataset.from_tensor_slices((val_images, val_labels, val_bi)).repeat()
+        self.val_dataset = tf.data.Dataset.from_tensor_slices((val_images, val_labels, val_labels, val_bi)).repeat()
         
         self.val_dataset = self.val_dataset.map(self.read_images,
                                                     num_parallel_calls = self.config.num_parallel_cores)
@@ -83,7 +83,7 @@ class DatasetFileLoader:
         self.val_dataset = self.val_dataset.map(self.preprocess_val,
                                                     num_parallel_calls = self.config.num_parallel_cores)
 
-        self.val_dataset = self.val_dataset.batch(1)
+        self.val_dataset = self.val_dataset.batch(self.config.batch_size)
 
         if (self.config.train_on_patches):
             self.val_dataset = self.val_dataset.map(
@@ -102,42 +102,42 @@ class DatasetFileLoader:
         print("Iterations Val: ", self.num_iterations_val)
         
     
-    def read_images(self, image_path, label, bag_index):
+    def read_images(self, image_path, label, mi_label, bag_index):
         image = tf.image.decode_png(tf.read_file(image_path), channels = 3)
         image.set_shape([None, None, 3])
         
-        return image, label, bag_index
+        return image, label, mi_label, bag_index
         
     
-    def preprocess_train(self, image, label, bag_index):
+    def preprocess_train(self, image, label, mi_label, bag_index):
         # Rotation is done (for patching mode --> pre-augment whole images, else --> augment)
         
         n_times_90 = int(random.choice(np.array(self.config.rotation_angles, dtype=np.int16) / 90))
         image = tf.image.rot90(image, k = n_times_90)
         
-        # If not in patching mode, make sure size is 224 
+        # If not in patching mode, make sure size is 227 
         if (not self.config.train_on_patches):
-            image = tf.image.resize_images(image, [224, 224])
+            image = tf.image.resize_images(image, [227, 227])
             image = tf.cast(image, dtype=tf.float32)
 
         
         logging.info(f"Shape of image: {pprint.pformat(tf.shape(image))}")
 
-        return image, tf.cast(label, tf.int64), bag_index
+        return image, tf.cast(label, tf.int32), tf.cast(mi_label, tf.int32), bag_index
     
     
-    def preprocess_val(self, image, label, bag_index):
+    def preprocess_val(self, image, label, mi_label, bag_index):
         # No Rotation is done 
         
-        # If not in patching mode, make sure size is 224 
+        # If not in patching mode, make sure size is 227 
         if (not self.config.train_on_patches):
-            image = tf.image.resize_images(image, [224, 224])
+            image = tf.image.resize_images(image, [227, 227])
             image = tf.cast(image, dtype=tf.float32)
 
         
-        return image, tf.cast(label, tf.int64), bag_index
+        return image, tf.cast(label, tf.int32), tf.cast(mi_label, tf.int32), bag_index
     
-    def get_patches_train(self, images, labels, bag_index):
+    def get_patches_train(self, images, labels, mi_labels, bag_index):
         # just getting a cleaner code below
         n_patches = self.config.n_random_patches
         p = self.config.patch_size
@@ -162,21 +162,26 @@ class DatasetFileLoader:
                                   dtype = tf.int32, seed = self.config.random_seed)
             j = i + n_patches
             
-            images, labels = tf.cond(
+            # need to fix repearing the labels and the bag indices for not having an MI layer
+            images, labels, bag_index = tf.cond(
                 tf.greater(tf.shape(images)[1], n_patches),
                 lambda: (tf.map_fn(lambda x: x[i[0] : j[0], :, :], images),
-                         tf.reshape(tf.map_fn(lambda x: tf.tile([x], [n_patches]), labels), shape=(-1,))),
-                lambda: (images, labels))
+                         tf.reshape(tf.map_fn(lambda x: tf.tile([x], [n_patches]), labels), shape=(-1,)),
+                         tf.reshape(tf.map_fn(lambda x: tf.tile([x], [n_patches]), bag_index), shape=(-1,))),
+                lambda: (images, labels, bag_index))
         else:
-            labels = tf.reshape(tf.map_fn(lambda x: tf.tile([x], [n_patches]), labels), shape=(-1,))
+            if (self.config.mode != 'mi_branch'):
+                labels = tf.reshape(tf.map_fn(lambda x: tf.tile([x], [n_patches]), labels), shape=(-1,))
                                 
+        bag_index = tf.reshape(tf.map_fn(lambda x: tf.tile([x], [n_patches]), bag_index), shape=(-1,))
+        
         images = tf.reshape(images, shape=(-1, p, p, c))
         
-        images = tf.image.resize_images(images, [224, 224])
+        images = tf.image.resize_images(images, [227, 227])
         
-        return tf.cast(images, dtype = tf.float32), labels, bag_index
+        return tf.cast(images, dtype = tf.float32), labels, mi_labels, bag_index
     
-    def get_patches_val(self, images, labels, bag_index):
+    def get_patches_val(self, images, labels, mi_labels, bag_index):
         p = self.config.patch_size
         c = self.config.channels
         
@@ -186,14 +191,17 @@ class DatasetFileLoader:
         # squeeze 1st and 2nd dimensions via reshape (validation) and repeat labels
         
         
-        labels = tf.reshape(tf.map_fn(lambda x: tf.tile([x], [n_patches]), labels), shape=(-1,))       
+        if (self.config.mode != 'mi_branch'):
+            labels = tf.reshape(tf.map_fn(lambda x: tf.tile([x], [n_patches]), labels), shape=(-1,))       
+            
+        bag_index = tf.reshape(tf.map_fn(lambda x: tf.tile([x], [n_patches]), bag_index), shape=(-1,))       
         images = tf.reshape(images, shape=(-1, p, p, c))
-        images = tf.image.resize_images(images, [224, 224])
+        images = tf.image.resize_images(images, [227, 227])
         
-        return tf.cast(images, dtype = tf.float32), labels, bag_index
+        return tf.cast(images, dtype = tf.float32), labels, mi_labels, bag_index
     
     
-    def patch_augment(self, images, labels, bag_index):
+    def patch_augment(self, images, labels, mi_labels, bag_index):
         
         # color augmentation for patches
         if (self.config.random_brightness):
@@ -213,7 +221,7 @@ class DatasetFileLoader:
             images = tf.contrib.image.rotate(
                 images, to_radian(degree_angles), interpolation = self.config.interpolation)
             
-        return tf.cast(images, dtype = tf.float32), labels, bag_index
+        return tf.cast(images, dtype = tf.float32), labels, mi_labels, bag_index
         
     
     def get_patch_count(self, image_path):

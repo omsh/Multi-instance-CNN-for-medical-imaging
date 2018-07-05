@@ -1,6 +1,6 @@
 import tensorflow as tf
 from utils.model_utils import acc_majority_class
-
+import numpy as np
 
 class BaseModel:
     def __init__(self, config):
@@ -81,12 +81,46 @@ class BaseModel:
         else:
             self.optimizer = tf.train.GradientDescentOptimizer(**self.config.optim_params)
             
-                
+    def mi_pool_layer_x(self, input_vector, bag_indices, pooling = 'average'):
+        print("Input to pool: ", input_vector.shape)
+        
+        unique_bag_ids, _ = tf.unique(bag_indices)
+        indices = tf.map_fn(lambda z: tf.squeeze(tf.where(tf.equal(z, bag_indices))), unique_bag_ids)
+
+        reshaped = tf.gather(input_vector, indices, axis=0)
+
+        # pool, iterate over each bag in the batch and compute pooling
+        if (pooling == 'max'):
+            pooled = tf.map_fn(lambda z: tf.reduce_max(z, axis=[0]), reshaped)
+        if (pooling == 'lse'):
+            pooled = tf.map_fn(lambda z: tf.reduce_logsumexp(z, axis=[0]), reshaped)
+        else:
+            pooled = tf.map_fn(lambda z: tf.reduce_mean(z, axis=[0]), reshaped)
+    
+        print("Pooled shape: ", pooled.shape)
+        pooled = tf.reshape(pooled, shape=(-1, 2048))
+        print("Pooled reshaped: ", pooled.shape)
+        return pooled
+    
+    def mi_pool_layer(self, input_vector, bag_indices, pooling = 'average'):
+        _, idx = tf.unique(bag_indices)
+        reshaped = tf.dynamic_partition(input_vector, idx, num_partitions=self.config.batch_size)
+
+        if (pooling == 'max'):
+            pooled = [tf.reduce_max(x, axis=[0]) for x in reshaped]
+        elif (pooling == 'lse'):
+            pooled = [tf.reduce_logsumexp(x, axis=[0]) for x in reshaped]
+        else:
+            pooled = [tf.reduce_mean(x, axis=[0]) for x in reshaped]
+            
+        return tf.stack(pooled)
+
     def evaluate_accuracy(self, y, preds, is_training, n_patches):
         return tf.cond(is_training,
                        lambda: tf.reduce_mean(tf.cast(tf.equal(y, preds), tf.float32)),
                        lambda: acc_majority_class(y, preds, n_patches))
 
+    
     def init_saver(self):
         # just copy the following line in your child class
         # self.saver = tf.train.Saver(max_to_keep=self.config.max_to_keep)

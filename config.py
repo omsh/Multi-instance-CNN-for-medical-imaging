@@ -1,8 +1,8 @@
 class Config:
 
     # directories
-    summary_dir = "summary/new_test_random_crops_rotation_2e4"
-    checkpoint_dir = "checkpoints/new_test_random_crops_rotation_2e4"
+    summary_dir = "summary/misi_227_test_1e4_lr25"
+    checkpoint_dir = "checkpoints/misi_224_test_1e4_lr25"
 
     # hardware parameters
     num_parallel_cores = 8
@@ -45,7 +45,7 @@ class Config:
 
     # patch geneartion
     train_on_patches = True
-    patch_size = 224
+    patch_size = 227
     
     # to be computed afterwards, needed for  validation and diff patching options
     patch_count = -1
@@ -56,16 +56,24 @@ class Config:
     
     patches_overlap = 0 # valid only for types 1 and 2, 0.1 --> 10% overlap
     
-    n_random_patches = 30  # use this one as a generic n_patches for types 2 and 3
+    n_random_patches = 15  # use this one as a generic n_patches for types 2 and 3
     random_seed = 1
-
-
+    
+    
     # Training parameters
     train_val_split = 0.75
     
-    batch_size = 2
+    batch_size = 4
     
-    num_epochs = 100
+    num_epochs = 200
+    
+    # Multiple Instance
+    #multiple_instance = True
+    mode = 'si_mi_branch'
+    available_modes = {'si_branch', 'mi_branch', 'si_mi_branch'}
+    
+    pooling = 'average'
+    available_pooling_functions = {'average', 'max', 'lse'}
 
     # Optimizer parameters
     optimizer_type = 'Adam'
@@ -81,8 +89,8 @@ class Config:
     
     lr_scheduler_params = {
         'learning_rate': optim_params['learning_rate'],   # this is the starting learning rate
-        'decay_steps': 7 * (dataset_size * train_val_split // batch_size),   # number of steps to wait for before decaying the learning rate
-        'decay_rate': 0.9,       # the rate by which the learing rate is decayed
+        'decay_steps': 25 * (dataset_size * train_val_split // batch_size),   # number of steps to wait for before decaying the learning rate
+        'decay_rate': 0.5,       # the rate by which the learing rate is decayed
         'staircase': True    # whether to decay discretely or continuously
     }
        

@@ -33,7 +33,7 @@ class MTrainer(BaseTrainer):
         # Summarizer
         self.summarizer = logger
 
-        self.x, self.y, self.bi, self.is_training = tf.get_collection('inputs')
+        self.x, self.y, self.y_mi, self.bi, self.is_training = tf.get_collection('inputs')
         self.train_op, self.loss_node, self.acc_node = tf.get_collection('train')
     
     def train(self):
