@@ -39,6 +39,7 @@ class MTrainer(BaseTrainer):
         self.best_val_acc = 0
         self.min_val_loss = 0
         self.best_val_predictions = None
+        self.best_val_epoch = None
         
     
     def train(self):
@@ -51,7 +52,12 @@ class MTrainer(BaseTrainer):
             self.train_epoch(cur_epoch)
             self.sess.run(self.model.increment_cur_epoch_tensor)
             self.test(cur_epoch)
-
+        
+        logging.info(f"Top Validaton Accuracy achieved:")
+        logging.info(f"Val Epoch: {pprint.pformat(self.best_val_epoch)}")
+        logging.info(f"Min Val Loss: {pprint.pformat(self.min_val_loss)}")
+        logging.info(f"Best Val Accuracy: {pprint.pformat(self.best_val_acc)}")
+        
     def train_epoch(self, epoch=None):
         """
         Train one epoch
@@ -82,14 +88,16 @@ class MTrainer(BaseTrainer):
         logging.info(f"Training Loss Per Epoch: {pprint.pformat(loss_per_epoch.val)}")
         logging.info(f"Accuracy Per Epoch: {pprint.pformat(acc_per_epoch.val)}")
 
-        self.current_beta = self.config.beta * (1 + self.model.cur_epoch_tensor.eval(self.sess) / self.config.num_epochs)
-        print("current_beta: ", self.current_beta)
+        
+        logging.info(f"Current_si_weight: {pprint.pformat(self.sess.run(self.model.current_beta))}")
+        logging.info(f"Current_mi_weight: {pprint.pformat(1 - self.sess.run(self.model.current_beta))}")
         
         # summarize
         summaries_dict = {'train/loss_per_epoch': loss_per_epoch.val,
                           'train/acc_per_epoch': acc_per_epoch.val,
                           'learning_rate' : self.sess.run(self.model.optimizer._lr),
-                          'beta' : self.current_beta}
+                          'si_weight' : self.sess.run(self.model.current_beta),
+                         'mi_weight' : 1 - self.sess.run(self.model.current_beta)}
         
         
         self.summarizer.summarize(self.model.global_step_tensor.eval(self.sess), summaries_dict)
@@ -136,6 +144,8 @@ Epoch-{}  loss:{:.4f} -- acc:{:.4f}
         if (self.best_val_acc < acc_per_epoch.val):
             self.best_val_acc = acc_per_epoch.val
             self.min_val_loss = loss_per_epoch.val
+            self.best_val_epoch = epoch
+            
             logging.info(f"NEW Validaton Accuracy achieved!")
             logging.info(f"Val Epoch: {pprint.pformat(epoch)}")
             logging.info(f"Min Val Loss Per Epoch: {pprint.pformat(loss_per_epoch.val)}")

@@ -128,9 +128,9 @@ class ResNet50_MI(BaseModel):
         with tf.variable_scope('loss-acc'):
             
             if (self.config.mode == 'si_mi_branch'):
+                self.update_beta_combined_cost()
                 self.loss = combined_cost_function(self.y, self.logits_si, self.y_mi, self.logits,
-                                                   initial_beta = self.config.beta, n_epochs = self.config.num_epochs,
-                                                   epoch_i = self.cur_epoch_tensor)
+                                                   beta = self.current_beta)
             else:    
                 self.loss = tf.losses.sparse_softmax_cross_entropy(labels = self.y, logits = self.logits)
 

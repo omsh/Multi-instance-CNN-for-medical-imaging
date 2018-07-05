@@ -11,6 +11,8 @@ class BaseModel:
         self.increment_cur_epoch_tensor = None
         self.global_step_tensor = None
         self.increment_global_step_tensor = None
+        
+        self.current_beta = self.config.beta
 
         # init the global step
         self.init_global_step()
@@ -120,6 +122,9 @@ class BaseModel:
                        lambda: tf.reduce_mean(tf.cast(tf.equal(y, preds), tf.float32)),
                        lambda: acc_majority_class(y, preds, n_patches))
 
+    def update_beta_combined_cost(self):
+        self.current_beta =  self.current_beta * (self.config.beta_decay ** (self.cur_epoch_tensor / self.config.num_epochs))
+        self.current_beta = tf.cast(self.current_beta, dtype = tf.float32)
     
     def init_saver(self):
         # just copy the following line in your child class
