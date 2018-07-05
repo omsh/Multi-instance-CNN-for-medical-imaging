@@ -40,6 +40,7 @@ class MTrainer(BaseTrainer):
         self.min_val_loss = 0
         self.best_val_predictions = None
         self.best_val_epoch = None
+        self.best_predictions = None
         
     
     def train(self):
@@ -57,6 +58,8 @@ class MTrainer(BaseTrainer):
         logging.info(f"Val Epoch: {pprint.pformat(self.best_val_epoch)}")
         logging.info(f"Min Val Loss: {pprint.pformat(self.min_val_loss)}")
         logging.info(f"Best Val Accuracy: {pprint.pformat(self.best_val_acc)}")
+        logging.info(f"Predictions: {pprint.pformat(self.best_predictions)}")
+        logging.info(f"Labels: {pprint.pformat(self.y_mi)}")
         
     def train_epoch(self, epoch=None):
         """
@@ -145,6 +148,7 @@ Epoch-{}  loss:{:.4f} -- acc:{:.4f}
             self.best_val_acc = acc_per_epoch.val
             self.min_val_loss = loss_per_epoch.val
             self.best_val_epoch = epoch
+            self.best_prediction = tf.get_collection('predictions')
             
             logging.info(f"NEW Validaton Accuracy achieved!")
             logging.info(f"Val Epoch: {pprint.pformat(epoch)}")

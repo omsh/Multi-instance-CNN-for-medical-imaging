@@ -35,6 +35,7 @@ def main():
     logging.info(f"Address of GPU used for training: {pprint.pformat(Config.gpu_address)}")
 
     logging.info(f"Type of DataLoader: {pprint.pformat(Config.dataloader_type)}")
+    
 
     logging.info(f"Type of Model: {pprint.pformat(Config.model_type)}")
     logging.info(f"Number of Epochs: {pprint.pformat(Config.num_epochs)}")
@@ -50,6 +51,13 @@ def main():
 
     logging.info(f"Generating Patches: {pprint.pformat(Config.train_on_patches)}")
     logging.info(f"Patch size (square): {pprint.pformat(Config.patch_size)}")
+    logging.info(f"Number of Patches: {pprint.pformat(Config.n_random_patches)}")
+    
+    logging.info(f"Mode for network architecture and loss: {pprint.pformat(Config.mode)}")
+    logging.info(f"Initial weight value for combined loss (single instance weight) : {pprint.pformat(Config.beta)}")
+    logging.info(f"Exponential Decay Rate for weight for combined loss (single instance weight) : {pprint.pformat(Config.beta_decay)}")
+    logging.info(f"Pooling type used for Multiple instance pooling layer: {pprint.pformat(Config.pooling)}")
+    
 
     # create your data generator on the CPU 
 

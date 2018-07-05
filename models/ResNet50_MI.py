@@ -117,6 +117,9 @@ class ResNet50_MI(BaseModel):
             
             tf.add_to_collection('out', self.out)
             
+            if (not self.is_training):
+                tf.add_to_collection('predictions', self.out)
+            
             print("predictions out shape: ", self.out.shape)
             
             print("network output argmax resnet")

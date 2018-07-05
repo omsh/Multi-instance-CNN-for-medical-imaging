@@ -1,8 +1,8 @@
 class Config:
 
     # directories
-    summary_dir = "summary/misi_227_test_2e4_lr25_newbetadecay"
-    checkpoint_dir = "checkpoints/misi_224_test_2e4_lr25"
+    summary_dir = "summary/misi_227_test_1e4_lr25_decay0.3"
+    checkpoint_dir = "checkpoints/misi_227_test_1e4_lr25_decay0.3"
 
     # hardware parameters
     num_parallel_cores = 8
@@ -28,7 +28,7 @@ class Config:
     rotation_angles = [0]
     
     # Rotation for patches: If True, random roations are done on patches
-    random_rotation_patches = True
+    random_rotation_patches = False
     interpolation = 'NEAREST' 
     available_interpolation = {'NEAREST', 'BILINEAR'} 
     
@@ -56,19 +56,18 @@ class Config:
     
     patches_overlap = 0 # valid only for types 1 and 2, 0.1 --> 10% overlap
     
-    n_random_patches = 15  # use this one as a generic n_patches for types 2 and 3
+    n_random_patches = 20  # use this one as a generic n_patches for types 2 and 3
     random_seed = 1
     
     
     # Training parameters
-    train_val_split = 0.75
+    train_val_split = 0.85
     
-    batch_size = 4
+    batch_size = 3
     
-    num_epochs = 200
+    num_epochs = 100
     
     # Multiple Instance
-    #multiple_instance = True
     mode = 'si_mi_branch'
     available_modes = {'si_branch', 'mi_branch', 'si_mi_branch'}
     beta = 0.5
@@ -82,7 +81,7 @@ class Config:
     available_optimizers = {'Adam', 'GradientDescentOptimizer', 'MomentumOptimizer'}
     
     optim_params = {
-        'learning_rate': 2e-4
+        'learning_rate': 1e-4
     }
     
     # learning rate scheduler (decay) type and parameters
@@ -91,8 +90,8 @@ class Config:
     
     lr_scheduler_params = {
         'learning_rate': optim_params['learning_rate'],   # this is the starting learning rate
-        'decay_steps': 25 * (dataset_size * train_val_split // batch_size),   # number of steps to wait for before decaying the learning rate
-        'decay_rate': 0.5,       # the rate by which the learing rate is decayed
+        'decay_steps': 20 * (dataset_size * train_val_split // batch_size),   # number of steps to wait for before decaying the learning rate
+        'decay_rate': 0.3,       # the rate by which the learing rate is decayed
         'staircase': True    # whether to decay discretely or continuously
     }
        
