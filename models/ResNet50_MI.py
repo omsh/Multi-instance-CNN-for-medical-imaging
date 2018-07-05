@@ -129,11 +129,15 @@ class ResNet50_MI(BaseModel):
             
             if (self.config.mode == 'si_mi_branch'):
                 self.loss = combined_cost_function(self.y, self.logits_si, self.y_mi, self.logits,
-                                                   n_epochs = self.config.num_epochs, epoch_i = self.cur_epoch_tensor)
+                                                   initial_beta = self.config.beta, n_epochs = self.config.num_epochs,
+                                                   epoch_i = self.cur_epoch_tensor)
             else:    
                 self.loss = tf.losses.sparse_softmax_cross_entropy(labels = self.y, logits = self.logits)
 
-            self.acc = tf.reduce_mean(tf.cast(tf.equal(self.y, self.out_argmax), tf.float32))
+            if (self.config.mode != 'si_branch'):
+                self.acc = tf.reduce_mean(tf.cast(tf.equal(self.y_mi, self.out_argmax), tf.float32))
+            else:
+                self.acc = tf.reduce_mean(tf.cast(tf.equal(self.y, self.out_argmax), tf.float32))
             #self.acc = self.evaluate_accuracy(self.y, self.out_argmax,
             #                                  self.is_training, self.config.patch_count)
 

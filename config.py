@@ -1,8 +1,8 @@
 class Config:
 
     # directories
-    summary_dir = "summary/misi_227_test_1e4_lr25"
-    checkpoint_dir = "checkpoints/misi_224_test_1e4_lr25"
+    summary_dir = "summary/misi_227_test_2e4_lr25"
+    checkpoint_dir = "checkpoints/misi_224_test_2e4_lr25"
 
     # hardware parameters
     num_parallel_cores = 8
@@ -71,6 +71,7 @@ class Config:
     #multiple_instance = True
     mode = 'si_mi_branch'
     available_modes = {'si_branch', 'mi_branch', 'si_mi_branch'}
+    beta = 0.5
     
     pooling = 'average'
     available_pooling_functions = {'average', 'max', 'lse'}

@@ -23,12 +23,12 @@ def combined_cost_function(y_si, logits_si,
     print("logits_si: ",logits_si.shape)
     print("y_mi: ", y_mi.shape)
     print("logits_mi: ", logits_mi.shape)
-    si_loss = tf.nn.sparse_softmax_cross_entropy_with_logits(labels = y_si, logits = logits_si)
+    si_loss = tf.losses.sparse_softmax_cross_entropy(labels = y_si, logits = logits_si)
     
-    mi_loss = tf.nn.sparse_softmax_cross_entropy_with_logits(labels = y_mi, logits = logits_mi)
+    mi_loss = tf.losses.sparse_softmax_cross_entropy(labels = y_mi, logits = logits_mi)
 
     current_beta = initial_beta * (1 + epoch_i / n_epochs)
-    
+        
     current_beta = tf.cast(current_beta, dtype = tf.float32)
     
     return current_beta * mi_loss + (1 - current_beta) * si_loss
