@@ -39,8 +39,8 @@ class DatasetFileLoader:
         logging.info(f"Number of    Val   Images and Labels: {pprint.pformat(val_labels.shape[0])}")
         
         # save validation labels and image paths
-        pd.Series(val_labels).to_csv('./data/val_labels'+str(datetime.now())+'.csv')
-        pd.Series(val_images).to_csv('./data/val_images'+str(datetime.now())+'.csv')
+        pd.Series(val_labels).to_csv('./data/val_labels'+self.config.summary_dir+str(datetime.now())+'.csv')
+        pd.Series(val_images).to_csv('./data/val_images'+self.config.summary_dir+str(datetime.now())+'.csv')
         
         # precompute patch count (important for validation and testing)
         self.config.patch_count = self.get_patch_count(train_images[0])

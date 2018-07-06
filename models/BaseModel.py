@@ -30,7 +30,10 @@ class BaseModel:
         self.saver = None
 
     # save function that saves the checkpoint in the path defined in the config file
-    def save(self, sess):
+    def save(self, sess, best = False):
+        path = self.config.checkpoint_dir
+        if (best):
+            path += '_best'
         print("Saving model...")
         self.saver.save(sess, self.config.checkpoint_dir, self.global_step_tensor)
         print("Model saved")
