@@ -161,7 +161,8 @@ Epoch-{}  loss:{:.4f} -- acc:{:.4f}
             self.best_preds = self.preds
             
             logging.info(f"Saving Predictions to data folder.")
-            pd.Series(self.best_preds).to_csv('./data/val_predictions'+self.config.summary_dir+str(datetime.now())+'.csv')
+            stamp = datetime.now().strftime(f"%Y-%m-%d_%H-%M-%S-")
+            pd.Series(self.best_preds).to_csv('./data/val_predictions'+stamp+'.csv')
             
             if (self.config.save_models):
                 self.model.save(self.sess)
