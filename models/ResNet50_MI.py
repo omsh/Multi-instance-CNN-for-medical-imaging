@@ -117,14 +117,11 @@ class ResNet50_MI(BaseModel):
             
             tf.add_to_collection('out', self.out)
             
-            if (not self.is_training):
-                tf.add_to_collection('predictions', self.out)
-            
             print("predictions out shape: ", self.out.shape)
             
             print("network output argmax resnet")
             with tf.variable_scope('out_argmax'):
-                self.out_argmax = tf.argmax(self.logits, axis=-1, output_type=tf.int32, name='out_argmax')
+                self.out_argmax = tf.argmax(self.out, axis=1, output_type=tf.int32, name='out_argmax')
                 
                 print("Arg Max Shape: ", self.out_argmax.shape)
 
@@ -149,6 +146,7 @@ class ResNet50_MI(BaseModel):
             with tf.control_dependencies(update_ops):
                 self.train_step = self.optimizer.minimize(self.loss, global_step=self.global_step_tensor)
 
+        tf.add_to_collection('test', self.out_argmax)
         tf.add_to_collection('train', self.train_step)
         tf.add_to_collection('train', self.loss)
         tf.add_to_collection('train', self.acc)
