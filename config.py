@@ -1,8 +1,8 @@
 class Config:
 
     # directories
-    summary_dir = "summary/misi_227_test_1e4_lr25_decay0.3"
-    checkpoint_dir = "checkpoints/misi_227_test_1e4_lr25_decay0.3"
+    summary_dir = "summary/misi_227_1e4_lr20_decay05_20p_4b"
+    checkpoint_dir = "checkpoints/misi_227_1e4_lr20_decay05_20p_4b"
 
     # hardware parameters
     num_parallel_cores = 8
@@ -41,7 +41,7 @@ class Config:
 
     # training on a subset of the data, for testing and prototyping
     train_on_subset = False
-    subset_size = 40
+    subset_size = 100
 
     # patch geneartion
     train_on_patches = True
@@ -61,11 +61,11 @@ class Config:
     
     
     # Training parameters
-    train_val_split = 0.85
+    train_val_split = 0.8
     
-    batch_size = 3
+    batch_size = 4
     
-    num_epochs = 100
+    num_epochs = 150
     
     # Multiple Instance
     mode = 'si_mi_branch'
@@ -91,7 +91,7 @@ class Config:
     lr_scheduler_params = {
         'learning_rate': optim_params['learning_rate'],   # this is the starting learning rate
         'decay_steps': 20 * (dataset_size * train_val_split // batch_size),   # number of steps to wait for before decaying the learning rate
-        'decay_rate': 0.3,       # the rate by which the learing rate is decayed
+        'decay_rate': 0.5,       # the rate by which the learing rate is decayed
         'staircase': True    # whether to decay discretely or continuously
     }
        
@@ -102,4 +102,4 @@ class Config:
 
     # Model saving parameters
     max_to_keep = 1
-    save_models = False
+    save_models = True
