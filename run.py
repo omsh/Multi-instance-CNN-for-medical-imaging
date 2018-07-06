@@ -24,7 +24,7 @@ from config import Config
 
 def main():
     # create the experiments dirs
-    create_dirs([Config.summary_dir, Config.checkpoint_dir, "logs"])
+    create_dirs([Config.summary_dir, "checkpoints", "logs"])
 
     handlers = [logging.FileHandler(datetime.now().strftime(f"./logs/%Y-%m-%d_%H-%M-%S-Log.log")),
                 logging.StreamHandler()]
