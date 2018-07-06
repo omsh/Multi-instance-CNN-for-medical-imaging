@@ -6,6 +6,7 @@ import pprint
 sys.path.extend(['..'])
 
 import tensorflow as tf
+from tensorflow.contrib.memory_stats.python.ops.memory_stats_ops import BytesInUse
 
 from dataloaders import DatasetLoader, DatasetFileLoader
 
@@ -71,7 +72,7 @@ def main():
     # create tensorflow session on the GPU defined in Config file
 
     with tf.device(Config.gpu_address):
-    
+        bytes_in_use = BytesInUse()
         with tf.Session(config=tf.ConfigProto(allow_soft_placement=True)) as sess:
 
             # create instance of the model you want
@@ -98,8 +99,16 @@ def main():
             # create trainer and path all previous components to it
             trainer = MTrainer(sess, model, Config, logger, data_loader)
 
+            print("Memory Usage:")
+            print("---------------------")
+            print(sess.run(bytes_in_use))
+            
             # here you train your model
             trainer.train()
+            print("Memory Usage:")
+            print("---------------------")
+            print(sess.run(bytes_in_use))
+            
 
 
 if __name__ == '__main__':
