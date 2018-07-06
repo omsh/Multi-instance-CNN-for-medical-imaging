@@ -12,7 +12,7 @@ class BaseModel:
         self.global_step_tensor = None
         self.increment_global_step_tensor = None
         
-        self.current_beta = self.config.beta
+        self.current_beta = tf.Variable(self.config.beta, dtype=tf.float64, trainable = False)
 
         # init the global step
         self.init_global_step()
@@ -123,7 +123,7 @@ class BaseModel:
                        lambda: acc_majority_class(y, preds, n_patches))
 
     def update_beta_combined_cost(self):
-        self.current_beta =  self.current_beta * (self.config.beta_decay ** (self.cur_epoch_tensor / self.config.num_epochs))
+        self.current_beta =  tf.multiply(self.current_beta, (self.config.beta_decay ** (self.cur_epoch_tensor / self.config.num_epochs)))
         self.current_beta = tf.cast(self.current_beta, dtype = tf.float32)
     
     def init_saver(self):
