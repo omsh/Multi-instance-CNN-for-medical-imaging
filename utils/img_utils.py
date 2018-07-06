@@ -73,7 +73,7 @@ def read_images_labels(dir_names=["data/0_Benign_PNGs", "data/1_Cnormal_PNGs", "
 # Function to split numpy arrays of images and labels with split a ratio
 # returns 4 arrays images, labels for train and val
 
-def split_train_val(images, labels, bag_index, ratio = 0.8, pre_shuffle = True, seed = 1, per_class_split = False):
+def split_train_val(images, labels, bag_index, ratio = 0.8, pre_shuffle = True, seed = 1, per_class_split = True):
         if (pre_shuffle):
             images, labels, bag_index = shuffle(images, labels, bag_index, random_state = seed)
             
