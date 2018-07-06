@@ -63,7 +63,7 @@ class MTrainer(BaseTrainer):
         logging.info(f"Val Epoch: {pprint.pformat(self.best_val_epoch)}")
         logging.info(f"Min Val Loss: {pprint.pformat(self.min_val_loss)}")
         logging.info(f"Best Val Accuracy: {pprint.pformat(self.best_val_acc)}")
-        logging.info(f"Saving Predictions to data folder.")
+        
         logging.info(f"Predictions: {pprint.pformat(self.best_preds)}")
         pd.Series(self.best_preds).to_csv('./data/val_predictions'+self.config.summary_dir+str(datetime.now())+'.csv')
         
@@ -159,6 +159,9 @@ Epoch-{}  loss:{:.4f} -- acc:{:.4f}
             self.min_val_loss = loss_per_epoch.val
             self.best_val_epoch = epoch
             self.best_preds = self.preds
+            
+            logging.info(f"Saving Predictions to data folder.")
+            pd.Series(self.best_preds).to_csv('./data/val_predictions'+self.config.summary_dir+str(datetime.now())+'.csv')
             
             if (self.config.save_models):
                 self.model.save(self.sess)
