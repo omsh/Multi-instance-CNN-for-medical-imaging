@@ -1,7 +1,8 @@
 from trainers.BaseTrainer import BaseTrainer
 from tqdm import tqdm
 import numpy as np
-
+import pandas as pd
+from datetime import datetime
 import tensorflow as tf
 
 from utils.metrics import AverageMeter
@@ -35,12 +36,16 @@ class MTrainer(BaseTrainer):
 
         self.x, self.y, self.y_mi, self.bi, self.is_training = tf.get_collection('inputs')
         self.train_op, self.loss_node, self.acc_node = tf.get_collection('train')
+        self.argmax_node = tf.get_collection('test')
+        
         
         self.best_val_acc = 0
         self.min_val_loss = 0
-        self.best_val_predictions = None
         self.best_val_epoch = None
-        self.best_predictions = None
+        
+        self.preds = []
+        self.best_preds = []
+        
         
     
     def train(self):
@@ -58,8 +63,9 @@ class MTrainer(BaseTrainer):
         logging.info(f"Val Epoch: {pprint.pformat(self.best_val_epoch)}")
         logging.info(f"Min Val Loss: {pprint.pformat(self.min_val_loss)}")
         logging.info(f"Best Val Accuracy: {pprint.pformat(self.best_val_acc)}")
-        logging.info(f"Predictions: {pprint.pformat(self.best_predictions)}")
-        logging.info(f"Labels: {pprint.pformat(self.y_mi)}")
+        logging.info(f"Saving Predictions to data folder.")
+        logging.info(f"Predictions: {pprint.pformat(self.best_preds)}")
+        pd.Series(self.best_preds).to_csv('./data/val_predictions'+str(datetime.now())+'.csv')
         
     def train_epoch(self, epoch=None):
         """
@@ -134,21 +140,25 @@ Epoch-{}  loss:{:.4f} -- acc:{:.4f}
 
         loss_per_epoch = AverageMeter()
         acc_per_epoch = AverageMeter()
-
+        self.preds = []
+        
         # Iterate over batches
         for cur_it in tt:
             # One Train step on the current batch
-            loss, acc = self.sess.run([self.loss_node, self.acc_node],
+            loss, acc, arg_max = self.sess.run([self.loss_node, self.acc_node, self.argmax_node],
                                      feed_dict={self.is_training: False})
             # update metrics returned from train_step func
             loss_per_epoch.update(loss)
             acc_per_epoch.update(acc)
+            
+            self.preds = np.append(self.preds, arg_max)
+            
         
         if (self.best_val_acc < acc_per_epoch.val):
             self.best_val_acc = acc_per_epoch.val
             self.min_val_loss = loss_per_epoch.val
             self.best_val_epoch = epoch
-            self.best_prediction = tf.get_collection('predictions')
+            self.best_preds = self.preds
             
             logging.info(f"NEW Validaton Accuracy achieved!")
             logging.info(f"Val Epoch: {pprint.pformat(epoch)}")

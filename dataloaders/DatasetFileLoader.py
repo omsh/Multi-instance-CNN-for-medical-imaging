@@ -1,11 +1,14 @@
 import tensorflow as tf
 import numpy as np
+import pandas as pd
 from PIL import Image
 from utils.img_utils import get_images_pathlist_labels, extract_patches_from_tensor, split_train_val
 import logging
 import pprint
 import random
 from math import pi
+from datetime import datetime
+
 
 class DatasetFileLoader:
     """
@@ -35,6 +38,9 @@ class DatasetFileLoader:
         logging.info(f"Number of Training Images and Labels: {pprint.pformat(train_labels.shape[0])}")
         logging.info(f"Number of    Val   Images and Labels: {pprint.pformat(val_labels.shape[0])}")
         
+        # save validation labels and image paths
+        pd.Series(val_labels).to_csv('./data/val_labels'+str(datetime.now())+'.csv')
+        pd.Series(val_images).to_csv('./data/val_images'+str(datetime.now())+'.csv')
         
         # precompute patch count (important for validation and testing)
         self.config.patch_count = self.get_patch_count(train_images[0])
