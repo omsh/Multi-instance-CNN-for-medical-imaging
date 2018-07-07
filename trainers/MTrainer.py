@@ -65,7 +65,8 @@ class MTrainer(BaseTrainer):
         logging.info(f"Best Val Accuracy: {pprint.pformat(self.best_val_acc)}")
         
         logging.info(f"Predictions: {pprint.pformat(self.best_preds)}")
-        pd.Series(self.best_preds).to_csv('./data/val_predictions'+self.config.summary_dir+str(datetime.now())+'.csv')
+        stamp = datetime.now().strftime(f"%Y-%m-%d_%H-%M-%S-")
+        pd.Series(self.best_preds).to_csv('./data/val_predictions'+stamp+'.csv')
         
     def train_epoch(self, epoch=None):
         """
@@ -111,8 +112,8 @@ class MTrainer(BaseTrainer):
         
         self.summarizer.summarize(self.model.global_step_tensor.eval(self.sess), summaries_dict)
 
-        if (self.config.save_models):
-            self.model.save(self.sess)
+        #if (self.config.save_models):
+        #    self.model.save(self.sess)
         
         print("""
 Epoch-{}  loss:{:.4f} -- acc:{:.4f}
@@ -165,7 +166,7 @@ Epoch-{}  loss:{:.4f} -- acc:{:.4f}
             pd.Series(self.best_preds).to_csv('./data/val_predictions'+stamp+'.csv')
             
             if (self.config.save_models):
-                self.model.save(self.sess)
+                self.model.save(self.sess, best = True)
             
             logging.info(f"NEW Validaton Accuracy achieved!")
             logging.info(f"Val Epoch: {pprint.pformat(epoch)}")

@@ -121,7 +121,7 @@ class ResNet50_MI(BaseModel):
             
             print("network output argmax resnet")
             with tf.variable_scope('out_argmax'):
-                self.out_argmax = tf.argmax(self.out, axis=1, output_type=tf.int32, name='out_argmax')
+                self.out_argmax = tf.argmax(self.out, axis=-1, output_type=tf.int32, name='out_argmax')
                 
                 print("Arg Max Shape: ", self.out_argmax.shape)
 
