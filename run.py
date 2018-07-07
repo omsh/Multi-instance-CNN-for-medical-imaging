@@ -12,6 +12,8 @@ from dataloaders import DatasetLoader, DatasetFileLoader
 
 from models import LeNet, ResNet18, ResNet50, AlexNet, Inception, ResNeXt
 from models import ResNet50_MI
+from models import ResNet18_MI
+from models import ResNeXt_MI
 
 from trainers.MTrainer import MTrainer
 
@@ -79,7 +81,7 @@ def main():
             if (Config.model_type.lower() == 'lenet'):
                 model = LeNet.LeNet(data_loader, Config)
             elif (Config.model_type.lower() == 'resnet18'):
-                model = ResNet18.ResNet18(data_loader, Config)
+                model = ResNet18_MI.ResNet18_MI(data_loader, Config)
             elif (Config.model_type.lower() == 'resnet50'):
                 model = ResNet50_MI.ResNet50_MI(data_loader, Config)
             elif (Config.model_type.lower() == 'alexnet'):
@@ -87,7 +89,7 @@ def main():
             elif (Config.model_type.lower() == 'inception'):
                 model = Inception.Inception(data_loader, Config)
             elif (Config.model_type.lower() == 'resnext'):
-                model = ResNeXt.ResNeXt(data_loader, Config)
+                model = ResNeXt_MI.ResNeXt_MI(data_loader, Config)
             else:
                 model = LeNet.LeNet(data_loader, Config)
 

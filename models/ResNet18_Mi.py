@@ -15,9 +15,9 @@ import pprint
 # INCLUDE PRETRAINED WEIGHTS
 # CHECK NECESSITY OF FLOP-UPDATE
 
-class ResNet18_Mi(BaseModel):
+class ResNet18_MI(BaseModel):
     def __init__(self, data_loader, config):
-        super(ResNet18_Mi, self).__init__(config)
+        super(ResNet18_MI, self).__init__(config)
 
         self.data_loader = data_loader
 
