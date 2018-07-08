@@ -37,6 +37,7 @@ class MTrainer(BaseTrainer):
         self.x, self.y, self.y_mi, self.bi, self.is_training = tf.get_collection('inputs')
         self.train_op, self.loss_node, self.acc_node = tf.get_collection('train')
         self.argmax_node = tf.get_collection('test')
+        self.out_node = tf.get_collection('out')
         
         
         self.best_val_acc = 0
@@ -44,6 +45,7 @@ class MTrainer(BaseTrainer):
         self.best_val_epoch = None
         
         self.preds = []
+        self.outputs = []
         self.best_preds = []
         
         
@@ -142,17 +144,19 @@ Epoch-{}  loss:{:.4f} -- acc:{:.4f}
         loss_per_epoch = AverageMeter()
         acc_per_epoch = AverageMeter()
         self.preds = []
+        self.outputs = []
         
         # Iterate over batches
         for cur_it in tt:
             # One Train step on the current batch
-            loss, acc, arg_max = self.sess.run([self.loss_node, self.acc_node, self.argmax_node],
+            loss, acc, arg_max, outputs = self.sess.run([self.loss_node, self.acc_node, self.argmax_node, self.out_node],
                                      feed_dict={self.is_training: False})
             # update metrics returned from train_step func
             loss_per_epoch.update(loss)
             acc_per_epoch.update(acc)
             
             self.preds = np.append(self.preds, arg_max)
+            self.outputs = np.append(self.outputs, outputs)
             
         
         if (self.best_val_acc < acc_per_epoch.val):
@@ -162,13 +166,15 @@ Epoch-{}  loss:{:.4f} -- acc:{:.4f}
             self.best_preds = self.preds
             
             logging.info(f"Saving Predictions to data folder.")
+            logging.info(f"Saving class probabilities to data folder.")
             stamp = datetime.now().strftime(f"%Y-%m-%d_%H-%M-%S-")
             pd.Series(self.best_preds).to_csv('./data/val_predictions'+stamp+'.csv')
+            pd.Series(self.outputs).to_csv('./data/val_class_probabilities'+stamp+'.csv')
             
             if (self.config.save_models):
                 self.model.save(self.sess, best = True)
             
-            logging.info(f"NEW Validaton Accuracy achieved!")
+            logging.info(f"************ NEW Validaton Accuracy achieved ************!")
             logging.info(f"Val Epoch: {pprint.pformat(epoch)}")
             logging.info(f"Min Val Loss Per Epoch: {pprint.pformat(loss_per_epoch.val)}")
             logging.info(f"Best Val Accuracy Per Epoch: {pprint.pformat(acc_per_epoch.val)}")

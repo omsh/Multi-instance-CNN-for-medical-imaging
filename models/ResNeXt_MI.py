@@ -172,7 +172,7 @@ class ResNeXt_MI(BaseModel):
 
             print("network output argmax ResNeXt")
             with tf.variable_scope('out_argmax'):
-                self.out_argmax = tf.argmax(self.logits, axis=-1, output_type=tf.int32, name='out_argmax')
+                self.out_argmax = tf.argmax(self.out, axis=-1, output_type=tf.int32, name='out_argmax')
 
                 print("Arg Max Shape: ", self.out_argmax.shape)
 
@@ -196,6 +196,7 @@ class ResNeXt_MI(BaseModel):
             with tf.control_dependencies(update_ops):
                 self.train_step = self.optimizer.minimize(self.loss, global_step=self.global_step_tensor)
 
+        tf.add_to_collection('test', self.out_argmax)
         tf.add_to_collection('train', self.train_step)
         tf.add_to_collection('train', self.loss)
         tf.add_to_collection('train', self.acc)

@@ -1,8 +1,8 @@
 class Config:
 
     # directories
-    summary_dir = "summary/misi_227_1e4_lr20_decay05_20p_4b"
-    checkpoint_dir = "checkpoints/misi_227_1e4_lr20_decay05_20p_4b"
+    summary_dir = "summary/misi_227_9e5_lr15_decay05_20p_4b_average"
+    checkpoint_dir = "checkpoints/misi_227_9e5_lr15_decay05_20p_4b_average"
 
     # hardware parameters
     num_parallel_cores = 8
@@ -28,7 +28,7 @@ class Config:
     rotation_angles = [0]
     
     # Rotation for patches: If True, random roations are done on patches
-    random_rotation_patches = False
+    random_rotation_patches = True
     interpolation = 'NEAREST' 
     available_interpolation = {'NEAREST', 'BILINEAR'} 
     
@@ -65,13 +65,13 @@ class Config:
     
     batch_size = 4
     
-    num_epochs = 150
+    num_epochs = 200
     
     # Multiple Instance
     mode = 'si_mi_branch'
     available_modes = {'si_branch', 'mi_branch', 'si_mi_branch'}
     beta = 0.5
-    beta_decay = 0.1
+    beta_decay = 0.2
     
     pooling = 'average'
     available_pooling_functions = {'average', 'max', 'lse'}
@@ -81,7 +81,7 @@ class Config:
     available_optimizers = {'Adam', 'GradientDescentOptimizer', 'MomentumOptimizer'}
     
     optim_params = {
-        'learning_rate': 1e-4
+        'learning_rate': 9e-5
     }
     
     # learning rate scheduler (decay) type and parameters
@@ -90,7 +90,7 @@ class Config:
     
     lr_scheduler_params = {
         'learning_rate': optim_params['learning_rate'],   # this is the starting learning rate
-        'decay_steps': 20 * (dataset_size * train_val_split // batch_size),   # number of steps to wait for before decaying the learning rate
+        'decay_steps': 15 * (dataset_size * train_val_split // batch_size),   # number of steps to wait for before decaying the learning rate
         'decay_rate': 0.5,       # the rate by which the learing rate is decayed
         'staircase': True    # whether to decay discretely or continuously
     }
