@@ -34,6 +34,8 @@ def main():
     logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.INFO, handlers=handlers)
 
     logging.info("Started Logging")
+    logging.info(f"Summary Directory Path: {pprint.pformat(Config.summary_dir)}")
+    logging.info(f"Checkpoint Path: {pprint.pformat(Config.checkpoint_dir)}")
     logging.info(f"Number of cores: {pprint.pformat(Config.num_parallel_cores)}")
     logging.info(f"Address of GPU used for training: {pprint.pformat(Config.gpu_address)}")
 
