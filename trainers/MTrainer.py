@@ -144,7 +144,7 @@ Epoch-{}  loss:{:.4f} -- acc:{:.4f}
         loss_per_epoch = AverageMeter()
         acc_per_epoch = AverageMeter()
         self.preds = []
-        self.outputs = []
+        self.outputs = np.array([]).reshape(0, self.config.num_classes)
         
         # Iterate over batches
         for cur_it in tt:
@@ -156,7 +156,7 @@ Epoch-{}  loss:{:.4f} -- acc:{:.4f}
             acc_per_epoch.update(acc)
             
             self.preds = np.append(self.preds, arg_max)
-            self.outputs = np.append(self.outputs, outputs)
+            self.outputs = np.concatenate((self.outputs, outputs[0]))
             
         
         if (self.best_val_acc < acc_per_epoch.val):
@@ -169,7 +169,7 @@ Epoch-{}  loss:{:.4f} -- acc:{:.4f}
             logging.info(f"Saving class probabilities to data folder.")
             stamp = datetime.now().strftime(f"%Y-%m-%d_%H-%M-%S-")
             pd.Series(self.best_preds).to_csv('./data/val_predictions'+stamp+'.csv')
-            pd.Series(self.outputs).to_csv('./data/val_class_probabilities'+stamp+'.csv')
+            pd.DataFrame(np.stack(self.outputs)).to_csv('./data/val_class_probabilities'+stamp+'.csv')
             
             if (self.config.save_models):
                 self.model.save(self.sess, best = True)
