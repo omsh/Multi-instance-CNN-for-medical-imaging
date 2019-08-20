@@ -16,6 +16,7 @@ class ResNet50(BaseModel):
         # define some important variables
         self.x = None
         self.y = None
+        self.bi = None
         self.is_training = None
         self.out_argmax = None
         self.loss = None
@@ -34,8 +35,8 @@ class ResNet50(BaseModel):
         """
         Helper Variables
         """
-        self.global_step_tensor = tf.Variable(0, trainable=False, name='global_step')
-        self.global_step_inc = self.global_step_tensor.assign(self.global_step_tensor + 1)
+        #self.global_step_tensor = tf.Variable(0, trainable=False, name='global_step')
+        #self.global_step_inc = self.global_step_tensor.assign(self.global_step_tensor + 1)
         self.global_epoch_tensor = tf.Variable(0, trainable=False, name='global_epoch')
         self.global_epoch_inc = self.global_epoch_tensor.assign(self.global_epoch_tensor + 1)
         
@@ -43,10 +44,11 @@ class ResNet50(BaseModel):
         Inputs to the network
         """
         with tf.variable_scope('inputs'):
-            self.x, self.y = self.data_loader.get_input()
+            self.x, self.y, self.bi = self.data_loader.get_input()
             self.is_training = tf.placeholder(tf.bool, name='Training_flag')
         tf.add_to_collection('inputs', self.x)
         tf.add_to_collection('inputs', self.y)
+        tf.add_to_collection('inputs', self.bi)
         tf.add_to_collection('inputs', self.is_training)
 
         """
@@ -77,15 +79,16 @@ class ResNet50(BaseModel):
             #one_hot_y = tf.one_hot(indices=self.y, depth=self.num_classes)
             
             self.loss = tf.losses.sparse_softmax_cross_entropy(labels = self.y, logits = self.logits)
-            
-            
+
             #probabilities = end_points['Predictions']
-            
+
             #accuracy, accuracy_update = tf.metrics.accuracy(labels = one_hot_y, predictions = self.out_argmax)
-            self.acc = tf.reduce_mean(tf.cast(tf.equal(self.y, self.out_argmax), tf.float32))
+            
+            #self.acc = tf.reduce_mean(tf.cast(tf.equal(self.y, self.out_argmax), tf.float32))
+            self.acc = self.evaluate_accuracy(self.y, self.out_argmax,
+                                              self.is_training, self.config.patch_count)
 
         with tf.variable_scope('train_step'):
-            #self.optimizer = tf.train.AdamOptimizer(self.config.learning_rate)
             update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
             with tf.control_dependencies(update_ops):
                 self.train_step = self.optimizer.minimize(self.loss, global_step=self.global_step_tensor)

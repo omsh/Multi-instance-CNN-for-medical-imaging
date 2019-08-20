@@ -14,6 +14,7 @@ class AlexNet(BaseModel):
         # define some important variables
         self.x = None
         self.y = None
+        self.bi = None
         self.is_training = None
         self.out_argmax = None
         self.loss = None
@@ -32,8 +33,8 @@ class AlexNet(BaseModel):
         """
         Helper Variables
         """
-        self.global_step_tensor = tf.Variable(0, trainable=False, name='global_step')
-        self.global_step_inc = self.global_step_tensor.assign(self.global_step_tensor + 1)
+        #self.global_step_tensor = tf.Variable(0, trainable=False, name='global_step')
+        #self.global_step_inc = self.global_step_tensor.assign(self.global_step_tensor + 1)
         self.global_epoch_tensor = tf.Variable(0, trainable=False, name='global_epoch')
         self.global_epoch_inc = self.global_epoch_tensor.assign(self.global_epoch_tensor + 1)
 
@@ -46,6 +47,7 @@ class AlexNet(BaseModel):
             self.is_training = tf.placeholder(tf.bool, name='Training_flag')
         tf.add_to_collection('inputs', self.x)
         tf.add_to_collection('inputs', self.y)
+        tf.add_to_collection('inputs', self.bi)
         tf.add_to_collection('inputs', self.is_training)
 
         """
@@ -83,7 +85,9 @@ class AlexNet(BaseModel):
             # probabilities = end_points['Predictions']
 
             # accuracy, accuracy_update = tf.metrics.accuracy(labels = one_hot_y, predictions = self.out_argmax)
-            self.acc = tf.reduce_mean(tf.cast(tf.equal(self.y, self.out_argmax), tf.float32))
+            #self.acc = tf.reduce_mean(tf.cast(tf.equal(self.y, self.out_argmax), tf.float32))
+            self.acc = self.evaluate_accuracy(self.y, self.out_argmax,
+                                              self.is_training, self.config.patch_count)
 
         with tf.variable_scope('train_step'):
             update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)

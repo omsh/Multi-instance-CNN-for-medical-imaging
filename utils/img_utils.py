@@ -2,6 +2,7 @@ import glob
 from PIL import Image
 from sklearn.utils import shuffle
 from sklearn.preprocessing import LabelEncoder
+from sklearn.model_selection import StratifiedShuffleSplit
 from os.path import join
 from os import listdir
 import numpy as np
@@ -11,8 +12,7 @@ import ntpath
 import re
 
 
-def get_images_pathlist_labels(dir_names=["data/0_Benign_PNGs", "data/1_Cnormal_PNGs", "data/2_InSitu_PNGs",
-                            "data/3_Invasive_PNGs"], n = 100, pre_shuffle = True, seed = 1):
+def get_images_pathlist_labels(dir_names=["data/0_Benign_PNGs", "data/1_Cnormal_PNGs", "data/2_InSitu_PNGs", "data/3_Invasive_PNGs"], n = 100, pre_shuffle = True, seed = 1):
     if (n > 100):
         n = 100
 
@@ -30,13 +30,13 @@ def get_images_pathlist_labels(dir_names=["data/0_Benign_PNGs", "data/1_Cnormal_
     labels = le.fit_transform(labels)
     
     files_list, labels = np.asarray(files_list), np.asarray(labels)
+    bag_index = np.asarray(list(range(len(labels))))
 
     if (pre_shuffle):
         files_list, labels = shuffle(files_list, labels, random_state = seed)
 
-    return files_list, labels
+    return files_list, labels, bag_index
         
-
 
 # Function to read the converted png images and labels from disk and return numpy arrays
 
@@ -61,25 +61,38 @@ def read_images_labels(dir_names=["data/0_Benign_PNGs", "data/1_Cnormal_PNGs", "
         labels.append(label)
 
     images, labels = np.asarray(images), np.asarray(labels)
-
+    bag_index = np.asarray(list(range(len(labels))))
+    
     if (pre_shuffle):
         images, labels = shuffle(images, labels, random_state = seed)
 
-    return images, labels 
+    return images, labels, bag_index
 
 # -------------------------------------------------------------------------------------
 
 # Function to split numpy arrays of images and labels with split a ratio
 # returns 4 arrays images, labels for train and val
 
-def split_train_val(images, labels, ratio = 0.8, pre_shuffle = True, seed = 1):
-        n = labels.shape[0]
-        s = int(n * ratio)
+def split_train_val(images, labels, bag_index, ratio = 0.8, pre_shuffle = True, seed = 1, per_class_split = True):
         if (pre_shuffle):
-            images, labels = shuffle(images, labels, random_state = seed)
-        return images[:s], labels[:s], images[s:], labels[s:]
+            images, labels, bag_index = shuffle(images, labels, bag_index, random_state = seed)
+            
+        if (per_class_split):
+            sss = StratifiedShuffleSplit(n_splits=1, test_size=(1-ratio), random_state = seed)
+            for train_index, val_index in sss.split(images, labels):
+                X_train, X_val = images[train_index], images[val_index]
+                y_train, y_val = labels[train_index], labels[val_index]
+                bi_train, bi_val = bag_index[train_index], bag_index[val_index]
+            
+        else:
+            n = labels.shape[0]
+            s = int(n * ratio)
+            X_train, X_val =  images[:s], images[s:]
+            y_train, y_val =  labels[:s], labels[s:]
+            bi_train, bi_val = bag_index[:s], bag_index[s:]
+            
+        return X_train, y_train, bi_train, X_val, y_val, bi_val
     
-
 # -------------------------------------------------------------------------------------
 
 # Function to pre-augment whole images (needed before patching)
@@ -158,13 +171,16 @@ def get_patches_from_images_tensor(images, size=(224, 224), n_patches=-1, delta=
     return patches, number_of_patches_per_image
 
 
-def extract_patches_from_tensor(images, size=(224, 224)):
+def extract_patches_from_tensor(images, size=(224, 224), overlap = 0):
     n = tf.shape(images)[0]
     
     size_w, size_h = size
+    stride_w = (1 - overlap) * size_w
+    stride_h = (1 - overlap) * size_h
+    
     patches = tf.extract_image_patches(images,
-                                       [1, size_w, size_h, 1],
-                                       [1, size_w, size_h, 1],
+                                       [1, size_h, size_w, 1],
+                                       [1, stride_h, stride_w, 1],
                                        [1, 1, 1, 1],
                                        "SAME")
     
