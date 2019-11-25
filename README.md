@@ -18,15 +18,15 @@ The implementation framework is adopted from [Tensorflow Project Template](https
 
 ![High-level structure of the project](/imgs/project_structure.png "Figure: High-level structure of the project")
 
-An overview of the main model architecture contains a deep CNN followed by two branches (single-instance and multi-instance), where each has its own loss, with the multi-instance branch containing the custom pooling layer. The final loss is a weighted combination of both losses. The following figure shows an overview of the model architecture. This model is adopted from the paper [1](https://github.com/omsh/Multi-instance-CNN-for-medical-imaging#references).
+An overview of the main model architecture contains a deep CNN followed by two branches (single-instance and multi-instance), where each has its own loss, with the multi-instance branch containing the custom pooling layer. The final loss is a weighted combination of both losses. The following figure shows an overview of the model architecture. This model is adopted from the paper [[1]](https://github.com/omsh/Multi-instance-CNN-for-medical-imaging#references).
 
 ![Overview of the model architecture](/imgs/model_arch.png "Figure: Overview of the model architecture")
 
-A couple of different CNNs were tested as backbone, with most of the results reported on the famous ResNet [2](https://github.com/omsh/Multi-instance-CNN-for-medical-imaging#references)
+A couple of different CNNs were tested as backbone, with most of the results reported on the famous ResNet [[2]](https://github.com/omsh/Multi-instance-CNN-for-medical-imaging#references)
 
 The custom pooling layer can perform one of three operations; average-pooling, max-pooling, or log-sum-exponent. Results for experiements with the three pooling functions are reported.
 
-The combined weighted loss can also be varied during training, as done in [1](https://github.com/omsh/Multi-instance-CNN-for-medical-imaging#references). The following figure shows the weights of both losses (single-instance and multi-instance).
+The combined weighted loss can also be varied during training, as done in [[1]](https://github.com/omsh/Multi-instance-CNN-for-medical-imaging#references). The following figure shows the weights of both losses (single-instance and multi-instance).
 
 ![Variable loss weights](/imgs/var_loss_weights.png "Figure: Variable loss weights")
 
