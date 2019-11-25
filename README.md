@@ -8,7 +8,7 @@ The dataset comes from the [BACH breast cancer histology images challenge] (http
 
 The dataset contains four classes ordered by the predominant cancer type, each class has 100 examples and images have a size of 2048 x 1536 pixels. A sample from each class is shown in the following figure.
 
-![Sample images from each class](https://github.com/omsh/Multi-instance-CNN-for-medical-imaging/tree/master/imgs/sample_images.png "Figure: Sample image from each class")
+![Sample images from each class](/imgs/sample_images.png "Figure: Sample image from each class")
 
 ## Overview of the Solution Used
 
@@ -16,11 +16,11 @@ Several patches are extracted from each image and fed to a deep CNN as a bag of 
 
 The implementation framework is adopted from [Tensorflow Project Template](https://github.com/MrGemy95/Tensorflow-Project-Template) with some customizations. The following figure shows the high-level structure of the project.
 
-![High-level structure of the project](https://github.com/omsh/Multi-instance-CNN-for-medical-imaging/tree/master/imgs/project_structure.png "Figure: High-level structure of the project")
+![High-level structure of the project](/imgs/project_structure.png "Figure: High-level structure of the project")
 
 An overview of the main model architecture contains a deep CNN followed by two branches (single-instance and multi-instance), where each has its own loss, with the multi-instance branch containing the custom pooling layer. The final loss is a weighted combination of both losses. The following figure shows an overview of the model architecture. This model is adopted from the paper [1] (https://github.com/omsh/Multi-instance-CNN-for-medical-imaging#References).
 
-![Overview of the model architecture](https://github.com/omsh/Multi-instance-CNN-for-medical-imaging/tree/master/imgs/model_arch.png "Figure: Overview of the model architecture")
+![Overview of the model architecture](/imgs/model_arch.png "Figure: Overview of the model architecture")
 
 A couple of different CNNs were tested as backbone, with most of the results reported on the famous ResNet [2] (https://github.com/omsh/Multi-instance-CNN-for-medical-imaging#References)
 
@@ -28,7 +28,7 @@ The custom pooling layer can perform one of three operations; average-pooling, m
 
 The combined weighted loss can also be varied during training, as done in [1] (https://github.com/omsh/Multi-instance-CNN-for-medical-imaging#References). The following figure shows the weights of both losses (single-instance and multi-instance).
 
-![Variable loss weights](https://github.com/omsh/Multi-instance-CNN-for-medical-imaging/tree/master/imgs/var_loss_weights.png "Figure: Variable loss weights")
+![Variable loss weights](/imgs/var_loss_weights.png "Figure: Variable loss weights")
 
 
 ## References
